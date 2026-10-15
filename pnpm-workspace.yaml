@@ -1,0 +1,3 @@
+packages:
+  - "."
+  - "link-list-server"
