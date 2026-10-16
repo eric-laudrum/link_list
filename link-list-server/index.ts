@@ -4,11 +4,18 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { List } from './models.ts';
+import { List } from './models.js';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-mongoose.connect(process.env.MONGO_URI as string)
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+const uri = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@link-list.nltrce5.mongodb.net/link-list`;
+
+mongoose.connect(uri)
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('MongoDB connection error:', err));
 
@@ -27,6 +34,7 @@ app.get('/lists', async (req, res) => {
         const lists = await List.find();
         res.json(lists);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Failed to fetch lists' });
     }
 });
