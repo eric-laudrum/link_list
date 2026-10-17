@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { List } from './models.ts';
-import { getItemMetadata, ITEM_VARIANTS, CATEGORY_WEIGHTS } from './utils/dictionary.ts';
+import { getItemMetadata, ITEM_VARIANTS, CATEGORY_WEIGHTS, resolveItemInput } from './utils/dictionary.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -55,25 +55,32 @@ io.on('connection', (socket) => {
     socket.on('add-item', async ({ listId, name, variantName }) => {
         const list = await List.findById(listId);
         if (list) {
-            const trimmedName = name.trim();
-            const cleanedName = trimmedName.charAt(0).toUpperCase() + trimmedName.slice(1);
-            const { category, orderWeight } = getItemMetadata(trimmedName);
+            const { resolvedName, resolvedVariant } = resolveItemInput(name, variantName || '');
 
-            const vName = variantName?.trim() || 'Default';
+            const cleanedName = resolvedName.charAt(0).toUpperCase() + resolvedName.slice(1);
+            const { category, orderWeight } = getItemMetadata(cleanedName);
+
+            const vName = resolvedVariant || 'Default';
             const cleanedVariantName = vName.charAt(0).toUpperCase() + vName.slice(1);
 
             const existingItem = list.items.find(i => i.name.toLowerCase() === cleanedName.toLowerCase());
 
             if (existingItem) {
-                existingItem.variants.push({ name: cleanedVariantName, quantity: 1, checked: false });
+                const existingVariant = existingItem.variants.find(v => v.name.toLowerCase() === cleanedVariantName.toLowerCase());
+                if (existingVariant) {
+                    existingVariant.quantity += 1;
+                } else {
+                    existingItem.variants.push({ name: cleanedVariantName, quantity: 1, checked: false, unavailable: false });
+                }
             } else {
                 list.items.push({
                     name: cleanedName,
                     category,
                     orderWeight,
-                    variants: [{ name: cleanedVariantName, quantity: 1, checked: false }]
+                    variants: [{ name: cleanedVariantName, quantity: 1, checked: false, unavailable: false }]
                 });
             }
+
             await list.save();
             io.to(listId).emit('list-data', list);
         }
@@ -82,9 +89,9 @@ io.on('connection', (socket) => {
     socket.on('update-variant-quantity', async ({ listId, itemId, variantId, quantity }) => {
         const list = await List.findById(listId);
         if (list) {
-            const item = list.items.id(itemId);
+            const item = list.items.find(i => i._id.toString() === itemId);
             if (item) {
-                const variant = item.variants.id(variantId);
+                const variant = item.variants.find(v => v._id.toString() === variantId);
                 if (variant) {
                     variant.quantity = Math.max(1, Number(quantity));
                     await list.save();
@@ -97,11 +104,28 @@ io.on('connection', (socket) => {
     socket.on('toggle-variant-check', async ({ listId, itemId, variantId, checked }) => {
         const list = await List.findById(listId);
         if (list) {
-            const item = list.items.id(itemId);
+            const item = list.items.find(i => i._id.toString() === itemId);
             if (item) {
-                const variant = item.variants.id(variantId);
+                const variant = item.variants.find(v => v._id.toString() === variantId);
                 if (variant) {
                     variant.checked = checked;
+                    if (checked) variant.unavailable = false; // Unmark unavailable if found
+                    await list.save();
+                    io.to(listId).emit('list-data', list);
+                }
+            }
+        }
+    });
+
+    socket.on('toggle-variant-unavailable', async ({ listId, itemId, variantId, unavailable }) => {
+        const list = await List.findById(listId);
+        if (list) {
+            const item = list.items.find(i => i._id.toString() === itemId);
+            if (item) {
+                const variant = item.variants.find(v => v._id.toString() === variantId);
+                if (variant) {
+                    variant.unavailable = unavailable;
+                    if (unavailable) variant.checked = false; // Uncheck if marked unavailable
                     await list.save();
                     io.to(listId).emit('list-data', list);
                 }
@@ -112,18 +136,20 @@ io.on('connection', (socket) => {
     socket.on('remove-variant', async ({ listId, itemId, variantId }) => {
         const list = await List.findById(listId);
         if (list) {
-            const item = list.items.id(itemId);
+            const item = list.items.find(i => i._id.toString() === itemId);
             if (item) {
-                item.variants.pull(variantId);
+                // Manually filter out the variant
+                item.variants = item.variants.filter((v: any) => v._id.toString() !== variantId) as any;
+
+                // If no variants are left, remove the entire item
                 if (item.variants.length === 0) {
-                    list.items.pull(itemId);
+                    list.items = list.items.filter((i: any) => i._id.toString() !== itemId) as any;
                 }
                 await list.save();
                 io.to(listId).emit('list-data', list);
             }
         }
     });
-
     socket.on('update-item-category', async ({ listId, itemId, category, orderWeight }) => {
         const list = await List.findOneAndUpdate(
             { _id: listId, 'items._id': itemId },

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-interface Variant { _id: string; name: string; checked: boolean; quantity: number; }
+interface Variant { _id: string; name: string; checked: boolean; unavailable: boolean; quantity: number; }
 interface Item { _id: string; name: string; category: string; orderWeight: number; variants: Variant[]; }
 interface GroceryList { _id: string; name: string; items: Item[]; }
 
@@ -123,6 +123,11 @@ function ListView({ listId, onBack }: { listId: string, onBack: () => void }) {
         socket.emit('toggle-variant-check', { listId, itemId, variantId, checked });
     };
 
+    const toggleUnavailable = (itemId: string, variantId: string, unavailable: boolean) => {
+        if (!socket) return;
+        socket.emit('toggle-variant-unavailable', { listId, itemId, variantId, unavailable });
+    };
+
     const removeVariant = (itemId: string, variantId: string) => {
         if (!socket) return;
         socket.emit('remove-variant', { listId, itemId, variantId });
@@ -166,10 +171,25 @@ function ListView({ listId, onBack }: { listId: string, onBack: () => void }) {
     const suggestions = variantsDict[itemName.toLowerCase().trim()] || [];
     const editingItem = list.items.find(i => i._id === editingCategoryId);
 
+    const totalItems = list.items.reduce((sum, item) => sum + (item.variants?.filter(v => !v.unavailable).length || 0), 0);
+    const checkedItems = list.items.reduce((sum, item) => sum + (item.variants?.filter(v => v.checked).length || 0), 0);
+    const progressPercentage = totalItems === 0 ? 0 : Math.round((checkedItems / totalItems) * 100);
+
     return (
         <div style={{ maxWidth: '600px', margin: '2rem auto', fontFamily: 'sans-serif' }}>
             <button onClick={onBack} style={{ marginBottom: '1rem' }}>&larr; Back to Lists</button>
-            <h2>{list.name}</h2>
+
+            <div style={{ marginBottom: '2rem' }}>
+                <h2 style={{ marginBottom: '1rem' }}>{list.name}</h2>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#555' }}>
+                    <span>Progress</span>
+                    <span>{checkedItems} / {totalItems}</span>
+                </div>
+                <div style={{ width: '100%', height: '8px', backgroundColor: '#e0e0e0', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ width: `${progressPercentage}%`, height: '100%', backgroundColor: '#4caf50', transition: 'width 0.3s ease' }} />
+                </div>
+            </div>
 
             <form onSubmit={e => addItem(e)} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -215,6 +235,7 @@ function ListView({ listId, onBack }: { listId: string, onBack: () => void }) {
                                                 variant={variant}
                                                 updateQuantity={updateQuantity}
                                                 toggleCheck={toggleCheck}
+                                                toggleUnavailable={toggleUnavailable}
                                                 removeVariant={removeVariant}
                                             />
                                         ))}
@@ -273,7 +294,7 @@ function ListView({ listId, onBack }: { listId: string, onBack: () => void }) {
     );
 }
 
-function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck, removeVariant }: { itemId: string, variant: Variant, updateQuantity: (i: string, v: string, q: number) => void, toggleCheck: (i: string, v: string, c: boolean) => void, removeVariant: (i: string, v: string) => void }) {
+function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck, toggleUnavailable, removeVariant }: { itemId: string, variant: Variant, updateQuantity: (i: string, v: string, q: number) => void, toggleCheck: (i: string, v: string, c: boolean) => void, toggleUnavailable: (i: string, v: string, u: boolean) => void, removeVariant: (i: string, v: string) => void }) {
     const [startX, setStartX] = useState<number | null>(null);
     const [offsetX, setOffsetX] = useState(0);
 
@@ -282,14 +303,18 @@ function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck, remove
     const onPointerMove = (e: React.PointerEvent) => {
         if (startX === null) return;
         const diff = e.clientX - startX;
-        if (diff > 0 && diff < 120) setOffsetX(diff);
+        if (diff > -120 && diff < 120) setOffsetX(diff);
     };
 
     const onPointerUp = () => {
         if (offsetX > 60) toggleCheck(itemId, variant._id, !variant.checked);
+        else if (offsetX < -60) toggleUnavailable(itemId, variant._id, !variant.unavailable);
         setStartX(null);
         setOffsetX(0);
     };
+
+    const bgColor = variant.checked ? '#e6ffe6' : variant.unavailable ? '#ffe6e6' : '#fff';
+    const textColor = (variant.checked || variant.unavailable) ? '#999' : '#000';
 
     return (
         <li
@@ -303,8 +328,8 @@ function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck, remove
                 padding: '0.75rem',
                 transform: `translateX(${offsetX}px)`,
                 transition: startX === null ? 'transform 0.2s ease, background-color 0.2s ease' : 'none',
-                backgroundColor: variant.checked ? '#e6ffe6' : '#fff',
-                color: variant.checked ? '#999' : '#000',
+                backgroundColor: bgColor,
+                color: textColor,
                 borderBottom: '1px solid #eee',
                 touchAction: 'pan-y'
             }}
@@ -318,13 +343,13 @@ function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck, remove
                     type="number"
                     value={variant.quantity || 1}
                     onChange={e => updateQuantity(itemId, variant._id, parseInt(e.target.value) || 1)}
-                    style={{ width: '40px', textAlign: 'center', backgroundColor: variant.checked ? '#e6ffe6' : '#fff', border: '1px solid #ccc', borderRadius: '4px' }}
+                    style={{ width: '40px', textAlign: 'center', backgroundColor: bgColor, border: '1px solid #ccc', borderRadius: '4px' }}
                     min="1"
                 />
                 <button onClick={() => updateQuantity(itemId, variant._id, (variant.quantity || 1) + 1)}>+</button>
             </div>
 
-            <span style={{ flex: 1, textDecoration: variant.checked ? 'line-through' : 'none' }}>
+            <span style={{ flex: 1, textDecoration: (variant.checked || variant.unavailable) ? 'line-through' : 'none' }}>
         {variant.name}
       </span>
 

@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 const variantSchema = new mongoose.Schema({
     name: { type: String, required: true },
     checked: { type: Boolean, default: false },
+    unavailable: { type: Boolean, default: false },
     quantity: { type: Number, default: 1 }
 });
 

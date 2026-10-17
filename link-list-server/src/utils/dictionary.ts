@@ -211,3 +211,45 @@ export function getItemMetadata(itemName: string) {
 
     return { category, orderWeight };
 }
+
+export function resolveItemInput(inputName: string, inputVariant: string) {
+    const lowerName = inputName.toLowerCase().trim();
+    const finalName = inputName.trim();
+    const finalVariant = inputVariant.trim();
+
+    for (const [parentItem, variants] of Object.entries(ITEM_VARIANTS)) {
+        const lowerParent = parentItem.toLowerCase();
+
+        for (const v of variants) {
+            const lowerV = v.toLowerCase();
+
+            if (lowerName === lowerV) {
+                return {
+                    resolvedName: parentItem,
+                    resolvedVariant: inputVariant ? `${v} - ${inputVariant}` : v
+                };
+            }
+
+            if (lowerName === `${lowerV} ${lowerParent}`) {
+                return {
+                    resolvedName: parentItem,
+                    resolvedVariant: inputVariant ? `${v} - ${inputVariant}` : v
+                };
+            }
+        }
+    }
+
+    const words = lowerName.split(' ');
+    if (words.length > 1 && !ITEM_DICTIONARY[lowerName]) {
+        const lastWord = words[words.length - 1];
+        if (ITEM_DICTIONARY[lastWord]) {
+            const potentialVariant = words.slice(0, -1).join(' ');
+            return {
+                resolvedName: lastWord,
+                resolvedVariant: inputVariant ? `${potentialVariant} - ${inputVariant}` : potentialVariant
+            };
+        }
+    }
+
+    return { resolvedName: finalName, resolvedVariant: finalVariant };
+}
