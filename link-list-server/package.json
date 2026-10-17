@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node --esm index.ts"
+    "dev": "tsx watch src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -20,5 +20,8 @@
   "type": "module",
   "dependencies": {
     "dotenv": "^18.0.8"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
   }
 }
