@@ -214,56 +214,102 @@ function ListView({ listId, onBack }: { listId: string, onBack: () => void }) {
                         <h3 style={{ margin: '0 0 0.5rem 0', color: '#555', borderBottom: '1px solid #ddd', paddingBottom: '0.25rem' }}>
                             {category}
                         </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {groupedItems[category].map(item => (
-                                <div key={item._id} style={{ border: '1px solid #eee', borderRadius: '4px', overflow: 'hidden' }}>
-                                    <div
-                                        onPointerDown={() => startHold(item._id)}
-                                        onPointerUp={cancelHold}
-                                        onPointerLeave={cancelHold}
-                                        onPointerMove={cancelHold}
-                                        onPointerCancel={cancelHold}
-                                        style={{ padding: '0.5rem 0.75rem', backgroundColor: '#f5f5f5', fontWeight: 'bold', borderBottom: '1px solid #eee', cursor: 'pointer', userSelect: 'none' }}
-                                    >
-                                        {item.name}
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+                            <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+                                {groupedItems[category].map(item => (
+                                    <div key={item._id} style={{
+                                        display: 'flex',
+                                        border: '1px solid #eee',
+                                        borderRadius: '4px',
+                                        overflow: 'hidden'
+                                    }}>
+                                        <div
+                                            onPointerDown={() => startHold(item._id)}
+                                            onPointerUp={cancelHold}
+                                            onPointerLeave={cancelHold}
+                                            onPointerMove={cancelHold}
+                                            onPointerCancel={cancelHold}
+                                            style={{
+                                                flex: '0 0 110px',
+                                                padding: '0.75rem',
+                                                backgroundColor: '#f5f5f5',
+                                                fontWeight: 'bold',
+                                                borderRight: '1px solid #eee',
+                                                cursor: 'pointer',
+                                                userSelect: 'none'
+                                            }}
+                                        >
+                                            {item.name}
+                                        </div>
+                                        <ul style={{listStyle: 'none', padding: 0, margin: 0, flex: 1}}>
+                                            {(item.variants || []).map(variant => (
+                                                <SwipeableVariant
+                                                    key={variant._id}
+                                                    itemId={item._id}
+                                                    variant={variant}
+                                                    updateQuantity={updateQuantity}
+                                                    toggleCheck={toggleCheck}
+                                                    toggleUnavailable={toggleUnavailable}
+                                                    removeVariant={removeVariant}
+                                                />
+                                            ))}
+                                        </ul>
                                     </div>
-                                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                                        {(item.variants || []).map(variant => (
-                                            <SwipeableVariant
-                                                key={variant._id}
-                                                itemId={item._id}
-                                                variant={variant}
-                                                updateQuantity={updateQuantity}
-                                                toggleCheck={toggleCheck}
-                                                toggleUnavailable={toggleUnavailable}
-                                                removeVariant={removeVariant}
-                                            />
-                                        ))}
-                                    </ul>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     </div>
                 ))}
             </div>
 
             {editingCategoryId && editingItem && (
-                <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div style={{ backgroundColor: '#fff', padding: '1.5rem', borderRadius: '8px', width: '90%', maxWidth: '400px' }}>
-                        <h3 style={{ marginTop: 0 }}>Move {editingItem.name}</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '50vh', overflowY: 'auto', marginBottom: '1rem' }}>
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: '#fff',
+                        padding: '1.5rem',
+                        borderRadius: '8px',
+                        width: '90%',
+                        maxWidth: '400px'
+                    }}>
+                        <h3 style={{marginTop: 0}}>Move {editingItem.name}</h3>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.5rem',
+                            maxHeight: '50vh',
+                            overflowY: 'auto',
+                            marginBottom: '1rem'
+                        }}>
                             {Object.entries(categoriesDict).map(([cat, weight]) => (
                                 <button
                                     key={cat}
                                     onClick={() => updateItemCategory(editingCategoryId, cat, weight)}
-                                    style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #ddd', background: '#fafafa', cursor: 'pointer', borderRadius: '4px' }}
+                                    style={{
+                                        padding: '0.75rem',
+                                        textAlign: 'left',
+                                        border: '1px solid #ddd',
+                                        background: '#fafafa',
+                                        cursor: 'pointer',
+                                        borderRadius: '4px'
+                                    }}
                                 >
                                     {cat}
                                 </button>
                             ))}
                         </div>
-                        <div style={{ display: 'flex', gap: '0.5rem', borderTop: '1px solid #ddd', paddingTop: '1rem' }}>
-                            <input
+                        <div style={{display: 'flex', gap: '0.5rem', borderTop: '1px solid #ddd', paddingTop: '1rem'}}>
+                        <input
                                 type="text"
                                 value={newCategoryName}
                                 onChange={e => setNewCategoryName(e.target.value)}
