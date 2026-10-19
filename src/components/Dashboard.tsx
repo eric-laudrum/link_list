@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import type { GroceryList } from '../types';
+import { API_URL } from '../config';
 
 export function Dashboard({ onSelectList, onOpenDict }: { onSelectList: (id: string) => void, onOpenDict: () => void }) {
     const [lists, setLists] = useState<GroceryList[]>([]);
     const [name, setName] = useState('');
 
     useEffect(() => {
-        fetch('http://localhost:3001/lists')
+        fetch(`${API_URL}/lists`)
             .then(res => res.json())
             .then(data => Array.isArray(data) && setLists(data))
             .catch(() => {});
@@ -15,7 +16,7 @@ export function Dashboard({ onSelectList, onOpenDict }: { onSelectList: (id: str
     const createList = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!name.trim()) return;
-        const res = await fetch('http://localhost:3001/lists', {
+        const res = await fetch(`${API_URL}/lists`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name.trim() })
@@ -27,7 +28,7 @@ export function Dashboard({ onSelectList, onOpenDict }: { onSelectList: (id: str
 
     const deleteList = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        await fetch(`http://localhost:3001/lists/${id}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/lists/${id}`, { method: 'DELETE' });
         setLists(lists.filter(l => l._id !== id));
     };
 

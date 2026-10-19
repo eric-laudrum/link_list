@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Store } from '../types';
+import { API_URL } from '../config';
 
 
 interface DictionaryData {
@@ -23,15 +24,23 @@ export function DictionaryView({ onBack }: { onBack: () => void }) {
     const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch('http://localhost:3001/stores')
+        fetch(`${API_URL}/stores`)
             .then(res => res.json())
             .then(setStores)
             .catch(() => {});
+
+        fetch(`${API_URL}/dictionary`)
+            .then(res => res.json())
+            .then(data => setDict({
+                categoryWeights: data.categoryWeights || {},
+                itemDictionary: data.itemDictionary || {},
+                itemVariants: data.itemVariants || {}
+            }));
     }, []);
 
     const createStore = async () => {
-        if (!newStoreName.trim()) return;
-        const res = await fetch('http://localhost:3001/stores', {
+        if (!newStoreName.trim() || !dict) return;
+        const res = await fetch(`${API_URL}/stores`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: newStoreName.trim(), categoryWeights: dict.categoryWeights })
@@ -40,6 +49,7 @@ export function DictionaryView({ onBack }: { onBack: () => void }) {
         setStores([...stores, created]);
         setNewStoreName('');
     };
+
 
     const updateStoreWeight = async (storeId: string, category: string, weight: number) => {
         const store = stores.find(s => s._id === storeId);

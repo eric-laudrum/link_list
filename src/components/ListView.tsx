@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import type { Item, GroceryList, Store } from '../types';
 import { SwipeableVariant } from './SwipeableVariant';
+import { API_URL } from '../config';
 
 export function ListView({ listId, onBack }: { listId: string, onBack: () => void }) {
     const [socket, setSocket] = useState<Socket | null>(null);
@@ -21,6 +22,32 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
         navigator.clipboard.writeText(window.location.href);
         alert('List link copied to clipboard!');
     };
+
+    useEffect(() => {
+        fetch(`${API_URL}/dictionary/variants`)
+            .then(res => res.json())
+            .then(setVariantsDict)
+            .catch(() => {});
+
+        fetch(`${API_URL}/dictionary/categories`)
+            .then(res => res.json())
+            .then(setCategoriesDict)
+            .catch(() => {});
+
+        fetch(`${API_URL}/stores`)
+            .then(res => res.json())
+            .then(setStores)
+            .catch(() => {});
+    }, []);
+
+    useEffect(() => {
+        const s = io(API_URL);
+        setSocket(s);
+        s.emit('join-list', listId);
+        s.on('list-data', (updatedList: GroceryList) => setList(updatedList));
+        return () => { s.disconnect(); };
+    }, [listId]);
+
 
     useEffect(() => {
         fetch('http://localhost:3001/dictionary/variants')
