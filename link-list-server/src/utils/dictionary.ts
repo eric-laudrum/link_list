@@ -1,4 +1,4 @@
-export const CATEGORY_WEIGHTS: Record<string, number> = {
+export let CATEGORY_WEIGHTS: Record<string, number> = {
     "Produce": 10,
     "Bakery & Deli": 20,
     "Meat & Seafood": 30,
@@ -14,7 +14,7 @@ export const CATEGORY_WEIGHTS: Record<string, number> = {
     "Other": 200
 };
 
-export const ITEM_DICTIONARY: Record<string, string> = {
+export let ITEM_DICTIONARY: Record<string, string> = {
     "green onion": "Produce",
     "broccoli": "Produce",
     "bell peppers": "Produce",
@@ -141,7 +141,7 @@ export const ITEM_DICTIONARY: Record<string, string> = {
     "chocolate": "Aisle 9 (Treats)"
 };
 
-export const ITEM_VARIANTS: Record<string, string[]> = {
+export let ITEM_VARIANTS: Record<string, string[]> = {
     "bell peppers": ["Red", "Green", "Yellow", "Mix"],
     "bell pepper": ["Red", "Green", "Yellow", "Mix"],
     "onions": ["Yellow", "White", "Spanish"],
@@ -217,20 +217,24 @@ export function resolveItemInput(inputName: string, inputVariant: string) {
     const finalName = inputName.trim();
     const finalVariant = inputVariant.trim();
 
-    for (const [parentItem, variants] of Object.entries(ITEM_VARIANTS)) {
-        const lowerParent = parentItem.toLowerCase();
+    const normalize = (str: string) => str.toLowerCase().trim().replace(/es$/, '').replace(/s$/, '');
+    const normalizedInput = normalize(lowerName);
 
+    for (const parentItem of Object.keys(ITEM_VARIANTS)) {
+        const normalizedParent = normalize(parentItem);
+        if (normalizedInput === normalizedParent) {
+            return {
+                resolvedName: parentItem,
+                resolvedVariant: finalVariant
+            };
+        }
+    }
+
+    for (const [parentItem, variants] of Object.entries(ITEM_VARIANTS)) {
+        const normalizedParent = normalize(parentItem);
         for (const v of variants) {
             const lowerV = v.toLowerCase();
-
-            if (lowerName === lowerV) {
-                return {
-                    resolvedName: parentItem,
-                    resolvedVariant: inputVariant ? `${v} - ${inputVariant}` : v
-                };
-            }
-
-            if (lowerName === `${lowerV} ${lowerParent}`) {
+            if (lowerName === lowerV || normalizedInput === `${lowerV} ${normalizedParent}`) {
                 return {
                     resolvedName: parentItem,
                     resolvedVariant: inputVariant ? `${v} - ${inputVariant}` : v
@@ -240,16 +244,24 @@ export function resolveItemInput(inputName: string, inputVariant: string) {
     }
 
     const words = lowerName.split(' ');
-    if (words.length > 1 && !ITEM_DICTIONARY[lowerName]) {
+    if (words.length > 1) {
         const lastWord = words[words.length - 1];
-        if (ITEM_DICTIONARY[lastWord]) {
-            const potentialVariant = words.slice(0, -1).join(' ');
-            return {
-                resolvedName: lastWord,
-                resolvedVariant: inputVariant ? `${potentialVariant} - ${inputVariant}` : potentialVariant
-            };
+        const normalizedLast = normalize(lastWord);
+        for (const parentItem of Object.keys(ITEM_VARIANTS)) {
+            if (normalizedLast === normalize(parentItem)) {
+                const potentialVariant = words.slice(0, -1).join(' ');
+                return {
+                    resolvedName: parentItem,
+                    resolvedVariant: inputVariant ? `${potentialVariant} - ${inputVariant}` : potentialVariant
+                };
+            }
         }
     }
 
     return { resolvedName: finalName, resolvedVariant: finalVariant };
+}
+export function setDictionaryState(newCategories: any, newItems: any, newVariants: any) {
+    CATEGORY_WEIGHTS = newCategories;
+    ITEM_DICTIONARY = newItems;
+    ITEM_VARIANTS = newVariants;
 }

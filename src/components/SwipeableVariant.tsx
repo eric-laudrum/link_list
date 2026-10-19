@@ -1,0 +1,72 @@
+import { useState } from 'react';
+import type { Variant } from '../types';
+
+export function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck, toggleUnavailable, removeVariant }: { itemId: string, variant: Variant, updateQuantity: (i: string, v: string, q: number) => void, toggleCheck: (i: string, v: string, c: boolean) => void, toggleUnavailable: (i: string, v: string, u: boolean) => void, removeVariant: (i: string, v: string) => void }) {
+    const [startX, setStartX] = useState<number | null>(null);
+    const [offsetX, setOffsetX] = useState(0);
+
+    const onPointerDown = (e: React.PointerEvent) => setStartX(e.clientX);
+
+    const onPointerMove = (e: React.PointerEvent) => {
+        if (startX === null) return;
+        const diff = e.clientX - startX;
+        if (diff > -120 && diff < 120) setOffsetX(diff);
+    };
+
+    const onPointerUp = () => {
+        if (offsetX > 60) toggleCheck(itemId, variant._id, !variant.checked);
+        else if (offsetX < -60) toggleUnavailable(itemId, variant._id, !variant.unavailable);
+        setStartX(null);
+        setOffsetX(0);
+    };
+
+    const bgColor = variant.checked ? '#e6ffe6' : variant.unavailable ? '#ffe6e6' : '#fff';
+    const textColor = (variant.checked || variant.unavailable) ? '#999' : '#000';
+
+    return (
+        <li
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerLeave={onPointerUp}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '0.75rem',
+                transform: `translateX(${offsetX}px)`,
+                transition: startX === null ? 'transform 0.2s ease, background-color 0.2s ease' : 'none',
+                backgroundColor: bgColor,
+                color: textColor,
+                borderBottom: '1px solid #eee',
+                touchAction: 'pan-y'
+            }}
+        >
+            <div
+                onPointerDown={e => e.stopPropagation()}
+                style={{ display: 'flex', alignItems: 'center', marginRight: '1rem', gap: '0.5rem' }}
+            >
+                <button onClick={() => updateQuantity(itemId, variant._id, (variant.quantity || 1) - 1)} disabled={(variant.quantity || 1) <= 1}>-</button>
+                <input
+                    type="number"
+                    value={variant.quantity || 1}
+                    onChange={e => updateQuantity(itemId, variant._id, parseInt(e.target.value) || 1)}
+                    style={{ width: '40px', textAlign: 'center', backgroundColor: bgColor, border: '1px solid #ccc', borderRadius: '4px' }}
+                    min="1"
+                />
+                <button onClick={() => updateQuantity(itemId, variant._id, (variant.quantity || 1) + 1)}>+</button>
+            </div>
+
+            <span style={{ flex: 1, textDecoration: (variant.checked || variant.unavailable) ? 'line-through' : 'none' }}>
+        {variant.name}
+      </span>
+
+            <button
+                onPointerDown={e => e.stopPropagation()}
+                onClick={() => removeVariant(itemId, variant._id)}
+                style={{ background: 'none', border: 'none', color: 'red', cursor: 'pointer', fontSize: '1.5rem', padding: '0 0.5rem' }}
+            >
+                &times;
+            </button>
+        </li>
+    );
+}
