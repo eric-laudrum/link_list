@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import type { Item, GroceryList } from '../types';
+import type { Item, GroceryList, Store } from '../types';
 import { SwipeableVariant } from './SwipeableVariant';
 
 export function ListView({ listId, onBack }: { listId: string, onBack: () => void }) {
@@ -10,10 +10,17 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
     const [variantName, setVariantName] = useState('');
     const [variantsDict, setVariantsDict] = useState<Record<string, string[]>>({});
     const [categoriesDict, setCategoriesDict] = useState<Record<string, number>>({});
+    const [stores, setStores] = useState<Store[]>([]);
+    const [activeStoreWeights, setActiveStoreWeights] = useState<Record<string, number>>({});
 
     const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
     const [newCategoryName, setNewCategoryName] = useState('');
     const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const copyShareLink = () => {
+        navigator.clipboard.writeText(window.location.href);
+        alert('List link copied to clipboard!');
+    };
 
     useEffect(() => {
         fetch('http://localhost:3001/dictionary/variants')
@@ -25,6 +32,11 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
             .then(res => res.json())
             .then(setCategoriesDict)
             .catch(() => {});
+
+        fetch('http://localhost:3001/stores')
+            .then(res => res.json())
+            .then(setStores)
+            .catch(() => {});
     }, []);
 
     useEffect(() => {
@@ -34,6 +46,29 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
         s.on('list-data', (updatedList: GroceryList) => setList(updatedList));
         return () => { s.disconnect(); };
     }, [listId]);
+
+    useEffect(() => {
+        if (!list?.storeId) {
+            setActiveStoreWeights({});
+            return;
+        }
+        const store = stores.find(s => s._id === list.storeId);
+        if (store) {
+            setActiveStoreWeights(store.categoryWeights || {});
+        }
+    }, [list?.storeId, stores]);
+
+    const changeStore = (storeId: string) => {
+        if (!socket) return;
+        socket.emit('update-list-store', { listId, storeId: storeId || null });
+    };
+
+    const getCategoryWeight = (cat: string, items: Item[]) => {
+        if (activeStoreWeights[cat] !== undefined) {
+            return activeStoreWeights[cat];
+        }
+        return items[0]?.orderWeight ?? categoriesDict[cat] ?? 200;
+    };
 
     const addItem = (e: React.FormEvent, directVariant?: string) => {
         e.preventDefault();
@@ -98,8 +133,8 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
     }, {} as Record<string, Item[]>);
 
     const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
-        const weightA = groupedItems[a][0]?.orderWeight ?? 100;
-        const weightB = groupedItems[b][0]?.orderWeight ?? 100;
+        const weightA = getCategoryWeight(a, groupedItems[a]);
+        const weightB = getCategoryWeight(b, groupedItems[b]);
         return weightA - weightB;
     });
 
@@ -111,31 +146,59 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
     const progressPercentage = totalItems === 0 ? 0 : Math.round((checkedItems / totalItems) * 100);
 
     return (
-        <div style={{ maxWidth: '600px', margin: '2rem auto', fontFamily: 'sans-serif' }}>
-            <button onClick={onBack} style={{ marginBottom: '1rem' }}>&larr; Back to Lists</button>
+        <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '0', boxSizing: 'border-box', fontFamily: 'sans-serif' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1rem 0 1rem' }}>
+                <button onClick={onBack} aria-label="Back" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', background: '#f1f5f9', border: '1px solid #cbd5e0', borderRadius: '8px', cursor: 'pointer', padding: 0 }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12" />
+                        <polyline points="12 19 5 12 12 5" />
+                    </svg>
+                </button>
+                <h2 style={{ margin: 0, fontSize: '1.5rem', textAlign: 'center', flex: 1, padding: '0 1rem', color: '#0f172a' }}>
+                    {list.name}
+                </h2>
+                <button onClick={copyShareLink} aria-label="Share List" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', background: '#e0f2fe', border: '1px solid #bae6fd', borderRadius: '8px', cursor: 'pointer', padding: 0 }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 8l5 5-5 5" />
+                        <path d="M23 13H11a7 7 0 0 0-7 7v1" />
+                    </svg>
+                </button>
+            </div>
 
-            <div style={{ marginBottom: '2rem' }}>
-                <h2 style={{ marginBottom: '1rem' }}>{list.name}</h2>
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
+                <select
+                    value={list.storeId || ''}
+                    onChange={e => changeStore(e.target.value)}
+                    style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', borderRadius: '8px', border: '1px solid #cbd5e0', background: '#f8fafc', color: '#0f172a' }}
+                >
+                    <option value="">Default Store Layout</option>
+                    {stores.map(s => (
+                        <option key={s._id} value={s._id}>{s.name}</option>
+                    ))}
+                </select>
+            </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#555' }}>
+            <div style={{ padding: '0 1rem 1.5rem 1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>
                     <span>Progress</span>
                     <span>{checkedItems} / {totalItems}</span>
                 </div>
-                <div style={{ width: '100%', height: '8px', backgroundColor: '#e0e0e0', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ width: `${progressPercentage}%`, height: '100%', backgroundColor: '#4caf50', transition: 'width 0.3s ease' }} />
+                <div style={{ width: '100%', height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ width: `${progressPercentage}%`, height: '100%', backgroundColor: '#22c55e', transition: 'width 0.3s ease' }} />
                 </div>
             </div>
 
-            <form onSubmit={e => addItem(e)} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '2rem' }}>
+            {/* Add Item */}
+            <form onSubmit={e => addItem(e)} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0 1rem 1rem 1rem' }}>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input type="text" value={itemName} onChange={e => setItemName(e.target.value)} placeholder="Item (e.g. Apples)" style={{ flex: 1, padding: '0.5rem' }} />
-                    <input type="text" value={variantName} onChange={e => setVariantName(e.target.value)} placeholder="Variant (Optional)" style={{ flex: 1, padding: '0.5rem' }} />
-                    <button type="submit" style={{ padding: '0.5rem 1rem' }}>Add</button>
+                    <input type="text" value={itemName} onChange={e => setItemName(e.target.value)} placeholder="Item (e.g. Apples)" style={{ flex: 1, padding: '0.75rem', fontSize: '1rem', borderRadius: '8px', border: '1px solid #cbd5e0' }} />
+                    <input type="text" value={variantName} onChange={e => setVariantName(e.target.value)} placeholder="Variant" style={{ width: '30%', padding: '0.75rem', fontSize: '1rem', borderRadius: '8px', border: '1px solid #cbd5e0' }} />
+                    <button type="submit" style={{ padding: '0.75rem 1rem', fontSize: '1rem', borderRadius: '8px', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer' }}>Add</button>
                 </div>
                 {suggestions.length > 0 && (
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         {suggestions.map(sug => (
-                            <button key={sug} type="button" onClick={(e) => addItem(e, sug)} style={{ padding: '0.25rem 0.75rem', borderRadius: '1rem', border: '1px solid #ccc', background: '#f9f9f9', cursor: 'pointer' }}>
+                            <button key={sug} type="button" onClick={(e) => addItem(e, sug)} style={{ padding: '0.4rem 0.75rem', borderRadius: '1rem', border: '1px solid #cbd5e0', background: '#f8fafc', cursor: 'pointer', fontSize: '0.9rem' }}>
                                 + {sug}
                             </button>
                         ))}
@@ -143,22 +206,49 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
                 )}
             </form>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {/* Category List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '2rem' }}>
                 {sortedCategories.map(category => (
-                    <div key={category}>
-                        <h3 style={{ margin: '0 0 0.5rem 0', color: '#555', borderBottom: '1px solid #ddd', paddingBottom: '0.25rem' }}>
+                    <div
+                        key={category}
+                        style={{
+                            backgroundColor: '#f8f9fa',
+                            borderTop: '1px solid #cbd5e0',
+                            borderBottom: '1px solid #cbd5e0'
+                        }}
+                    >
+                        <h3 style={{
+                            margin: '0',
+                            padding: '0.75rem 1rem',
+                            color: '#0f172a',
+                            fontSize: '1.1rem',
+                            backgroundColor: '#e2e8f0'
+                        }}>
                             {category}
                         </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: '#cbd5e0' }}>
                             {groupedItems[category].map(item => (
-                                <div key={item._id} style={{ display: 'flex', border: '1px solid #eee', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div key={item._id} style={{
+                                    display: 'flex',
+                                    backgroundColor: '#fff'
+                                }}>
                                     <div
                                         onPointerDown={() => startHold(item._id)}
                                         onPointerUp={cancelHold}
                                         onPointerLeave={cancelHold}
                                         onPointerMove={cancelHold}
                                         onPointerCancel={cancelHold}
-                                        style={{ flex: '0 0 110px', padding: '0.75rem', backgroundColor: '#f5f5f5', fontWeight: 'bold', borderRight: '1px solid #eee', cursor: 'pointer', userSelect: 'none' }}
+                                        style={{
+                                            flex: '0 0 110px',
+                                            padding: '0.75rem 1rem',
+                                            backgroundColor: '#f8fafc',
+                                            fontWeight: 'bold',
+                                            borderRight: '1px solid #e2e8f0',
+                                            cursor: 'pointer',
+                                            userSelect: 'none',
+                                            display: 'flex',
+                                            alignItems: 'center'
+                                        }}
                                     >
                                         {item.name}
                                     </div>
@@ -183,27 +273,58 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
             </div>
 
             {editingCategoryId && editingItem && (
-                <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div style={{ backgroundColor: '#fff', padding: '1.5rem', borderRadius: '8px', width: '90%', maxWidth: '400px' }}>
-                        <h3 style={{ marginTop: 0 }}>Move {editingItem.name}</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '50vh', overflowY: 'auto', marginBottom: '1rem' }}>
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: '#fff',
+                        padding: '1.5rem',
+                        borderRadius: '8px',
+                        width: '90%',
+                        maxWidth: '400px'
+                    }}>
+                        <h3 style={{marginTop: 0}}>Move {editingItem.name}</h3>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.5rem',
+                            maxHeight: '50vh',
+                            overflowY: 'auto',
+                            marginBottom: '1rem'
+                        }}>
                             {Object.entries(categoriesDict).map(([cat, weight]) => (
                                 <button
                                     key={cat}
                                     onClick={() => updateItemCategory(editingCategoryId, cat, weight)}
-                                    style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #ddd', background: '#fafafa', cursor: 'pointer', borderRadius: '4px' }}
+                                    style={{
+                                        padding: '0.75rem',
+                                        textAlign: 'left',
+                                        border: '1px solid #ddd',
+                                        background: '#fafafa',
+                                        cursor: 'pointer',
+                                        borderRadius: '4px'
+                                    }}
                                 >
                                     {cat}
                                 </button>
                             ))}
                         </div>
-                        <div style={{ display: 'flex', gap: '0.5rem', borderTop: '1px solid #ddd', paddingTop: '1rem' }}>
+                        <div style={{display: 'flex', gap: '0.5rem', borderTop: '1px solid #ddd', paddingTop: '1rem'}}>
                             <input
                                 type="text"
                                 value={newCategoryName}
                                 onChange={e => setNewCategoryName(e.target.value)}
                                 placeholder="New category..."
-                                style={{ flex: 1, padding: '0.5rem' }}
+                                style={{flex: 1, padding: '0.5rem'}}
                             />
                             <button
                                 onClick={() => {
@@ -211,14 +332,26 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
                                         updateItemCategory(editingCategoryId, newCategoryName.trim(), 199);
                                     }
                                 }}
-                                style={{ padding: '0.5rem 1rem' }}
+                                style={{padding: '0.5rem 1rem'}}
                             >
                                 Add
                             </button>
                         </div>
                         <button
-                            onClick={() => { setEditingCategoryId(null); setNewCategoryName(''); }}
-                            style={{ marginTop: '1rem', width: '100%', padding: '0.75rem', background: '#eee', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                            onClick={() => {
+                                setEditingCategoryId(null);
+                                setNewCategoryName('');
+                            }}
+                            style={{
+                                marginTop: '1rem',
+                                width: '100%',
+                                padding: '0.75rem',
+                                background: '#eee',
+                                border: '5px solid gold',
+                                cursor: 'pointer',
+                                borderRadius: '4px',
+
+                            }}
                         >
                             Cancel
                         </button>

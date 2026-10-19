@@ -43,27 +43,54 @@ export function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck,
         >
             <div
                 onPointerDown={e => e.stopPropagation()}
-                style={{ display: 'flex', alignItems: 'center', marginRight: '1rem', gap: '0.5rem' }}
+                style={{display: 'flex', alignItems: 'center', marginRight: '0.5rem', gap: '0.15rem'}}
             >
-                <button onClick={() => updateQuantity(itemId, variant._id, (variant.quantity || 1) - 1)} disabled={(variant.quantity || 1) <= 1}>-</button>
+                <button
+                    onClick={() => updateQuantity(itemId, variant._id, (variant.quantity || 1) - 1)}
+                    disabled={(variant.quantity || 1) <= 1}
+                    style={{width: '22px', height: '26px', padding: 0, fontSize: '0.85rem'}}
+                >
+                    -
+                </button>
                 <input
                     type="number"
                     value={variant.quantity || 1}
                     onChange={e => updateQuantity(itemId, variant._id, parseInt(e.target.value) || 1)}
-                    style={{ width: '40px', textAlign: 'center', backgroundColor: bgColor, border: '1px solid #ccc', borderRadius: '4px' }}
+                    style={{
+                        width: '32px',
+                        height: '22px',
+                        textAlign: 'center',
+                        backgroundColor: bgColor,
+                        border: '1px solid #ccc',
+                        borderRadius: '3px',
+                        fontSize: '0.85rem',
+                        padding: 0
+                    }}
                     min="1"
                 />
-                <button onClick={() => updateQuantity(itemId, variant._id, (variant.quantity || 1) + 1)}>+</button>
+                <button
+                    onClick={() => updateQuantity(itemId, variant._id, (variant.quantity || 1) + 1)}
+                    style={{width: '22px', height: '26px', padding: 0, fontSize: '0.85rem'}}
+                >
+                    +
+                </button>
             </div>
 
-            <span style={{ flex: 1, textDecoration: (variant.checked || variant.unavailable) ? 'line-through' : 'none' }}>
+            <span style={{flex: 1, textDecoration: (variant.checked || variant.unavailable) ? 'line-through' : 'none'}}>
         {variant.name}
       </span>
 
             <button
                 onPointerDown={e => e.stopPropagation()}
                 onClick={() => removeVariant(itemId, variant._id)}
-                style={{ background: 'none', border: 'none', color: 'red', cursor: 'pointer', fontSize: '1.5rem', padding: '0 0.5rem' }}
+                style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'red',
+                    cursor: 'pointer',
+                    fontSize: '1.5rem',
+                    padding: '0 0.5rem'
+                }}
             >
                 &times;
             </button>

@@ -9,6 +9,7 @@ import { connectDB } from './db.ts';
 import listRoutes from './routes/listRoutes.ts';
 import dictionaryRoutes from './routes/dictionaryRoutes.ts';
 import { registerListHandlers } from './socket/listHandlers.ts';
+import storeRoutes from './routes/storeRoutes.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -25,6 +26,7 @@ connectDB(uri);
 
 app.use('/lists', listRoutes);
 app.use('/dictionary', dictionaryRoutes);
+app.use('/stores', storeRoutes);
 
 io.on('connection', (socket) => {
     registerListHandlers(io, socket);

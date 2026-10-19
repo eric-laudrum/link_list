@@ -14,8 +14,15 @@ export interface Item {
     variants: Variant[];
 }
 
+export interface Store {
+    _id: string;
+    name: string;
+    categoryWeights: Record<string, number>;
+}
+
 export interface GroceryList {
     _id: string;
     name: string;
+    storeId?: string | null;
     items: Item[];
 }

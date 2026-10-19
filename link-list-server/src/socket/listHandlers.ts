@@ -38,7 +38,6 @@ export function registerListHandlers(io: Server, socket: Socket) {
                         dict.itemVariants.set(cleanedName, ITEM_VARIANTS[cleanedName]);
                         await dict.save();
                     }
-
                 }
             }
 
@@ -130,6 +129,15 @@ export function registerListHandlers(io: Server, socket: Socket) {
                 io.to(listId).emit('list-data', list);
             }
         }
+    });
+
+    socket.on('update-list-store', async ({ listId, storeId }) => {
+        const list = await List.findByIdAndUpdate(
+            listId,
+            { storeId: storeId || null },
+            { new: true }
+        );
+        if (list) io.to(listId).emit('list-data', list);
     });
 
     socket.on('update-item-category', async ({ listId, itemId, category, orderWeight }) => {
