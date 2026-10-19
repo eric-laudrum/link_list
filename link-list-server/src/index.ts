@@ -37,5 +37,3 @@ app.use('/stores', storeRoutes);
 io.on('connection', (socket) => {
     registerListHandlers(io, socket);
 });
-
-server.listen(3001, () => console.log('Server running on port 3001'));
