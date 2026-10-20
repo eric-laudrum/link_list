@@ -48,32 +48,6 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
         return () => { s.disconnect(); };
     }, [listId]);
 
-
-    useEffect(() => {
-        fetch('http://localhost:3001/dictionary/variants')
-            .then(res => res.json())
-            .then(setVariantsDict)
-            .catch(() => {});
-
-        fetch('http://localhost:3001/dictionary/categories')
-            .then(res => res.json())
-            .then(setCategoriesDict)
-            .catch(() => {});
-
-        fetch('http://localhost:3001/stores')
-            .then(res => res.json())
-            .then(setStores)
-            .catch(() => {});
-    }, []);
-
-    useEffect(() => {
-        const s = io('http://localhost:3001');
-        setSocket(s);
-        s.emit('join-list', listId);
-        s.on('list-data', (updatedList: GroceryList) => setList(updatedList));
-        return () => { s.disconnect(); };
-    }, [listId]);
-
     useEffect(() => {
         if (!list?.storeId) {
             setActiveStoreWeights({});
@@ -215,7 +189,6 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
                 </div>
             </div>
 
-            {/* Add Item */}
             <form onSubmit={e => addItem(e)} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0 1rem 1rem 1rem' }}>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <input type="text" value={itemName} onChange={e => setItemName(e.target.value)} placeholder="Item (e.g. Apples)" style={{ flex: 1, padding: '0.75rem', fontSize: '1rem', borderRadius: '8px', border: '1px solid #cbd5e0' }} />
@@ -233,7 +206,6 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
                 )}
             </form>
 
-            {/* Category List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '2rem' }}>
                 {sortedCategories.map(category => (
                     <div

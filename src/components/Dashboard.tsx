@@ -2,37 +2,62 @@ import { useEffect, useState } from 'react';
 import type { GroceryList } from '../types';
 import { API_URL } from '../config';
 
+// Generates and saves a unique ID for this specific phone/browser
+const getClientId = () => {
+    let id = localStorage.getItem('link_list_client_id');
+    if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem('link_list_client_id', id);
+    }
+    return id;
+};
+
 export function Dashboard({ onSelectList, onOpenDict }: { onSelectList: (id: string) => void, onOpenDict: () => void }) {
     const [lists, setLists] = useState<GroceryList[]>([]);
     const [name, setName] = useState('');
+    const [joinInput, setJoinInput] = useState('');
 
     useEffect(() => {
-        fetch(`${API_URL}/lists`)
+        const clientId = getClientId();
+        fetch(`${API_URL}/lists?clientId=${clientId}`)
             .then(res => res.json())
             .then(data => Array.isArray(data) && setLists(data))
-            .catch(() => {});
+            .catch(err => console.error('Failed to load lists:', err));
     }, []);
 
     const createList = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!name.trim()) return;
-        const res = await fetch(`${API_URL}/lists`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name.trim() })
-        });
-        const newList = await res.json();
-        setLists([newList, ...lists]);
-        setName('');
+
+        try {
+            const clientId = getClientId();
+            const res = await fetch(`${API_URL}/lists`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name.trim(), clientId })
+            });
+
+            if (!res.ok) throw new Error('Server rejected the list');
+
+            const newList = await res.json();
+            setLists([newList, ...lists]);
+            setName('');
+        } catch (error) {
+            console.error('Error creating list:', error);
+            alert('Failed to create list. Please check your connection.');
+        }
     };
 
     const deleteList = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        await fetch(`${API_URL}/lists/${id}`, { method: 'DELETE' });
-        setLists(lists.filter(l => l._id !== id));
+        try {
+            const clientId = getClientId();
+            await fetch(`${API_URL}/lists/${id}?clientId=${clientId}`, { method: 'DELETE' });
+            setLists(lists.filter(l => l._id !== id));
+        } catch (error) {
+            console.error('Error deleting list:', error);
+        }
     };
-
-    const [joinInput, setJoinInput] = useState('');
 
     const handleJoin = (e: React.FormEvent) => {
         e.preventDefault();

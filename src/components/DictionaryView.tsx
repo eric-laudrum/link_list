@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import type { Store } from '../types';
 import { API_URL } from '../config';
 
-
 interface DictionaryData {
     categoryWeights: Record<string, number>;
     itemDictionary: Record<string, string>;
@@ -11,7 +10,8 @@ interface DictionaryData {
 
 export function DictionaryView({ onBack }: { onBack: () => void }) {
     const [dict, setDict] = useState<DictionaryData | null>(null);
-    const [activeTab, setActiveTab] = useState<'items' | 'categories' | 'variants' | 'stores'>('items');const [newItem, setNewItem] = useState('');
+    const [activeTab, setActiveTab] = useState<'items' | 'categories' | 'variants' | 'stores'>('items');
+    const [newItem, setNewItem] = useState('');
     const [newItemCategory, setNewItemCategory] = useState('');
     const [newCatName, setNewCatName] = useState('');
     const [newCatWeight, setNewCatWeight] = useState(100);
@@ -50,7 +50,6 @@ export function DictionaryView({ onBack }: { onBack: () => void }) {
         setNewStoreName('');
     };
 
-
     const updateStoreWeight = async (storeId: string, category: string, weight: number) => {
         const store = stores.find(s => s._id === storeId);
         if (!store) return;
@@ -58,21 +57,9 @@ export function DictionaryView({ onBack }: { onBack: () => void }) {
         setStores(stores.map(s => s._id === storeId ? { ...s, categoryWeights: updatedWeights } : s));
     };
 
-
-
-    useEffect(() => {
-        fetch('http://localhost:3001/dictionary')
-            .then(res => res.json())
-            .then(data => setDict({
-                categoryWeights: data.categoryWeights || {},
-                itemDictionary: data.itemDictionary || {},
-                itemVariants: data.itemVariants || {}
-            }));
-    }, []);
-
     const save = async () => {
         if (!dict) return;
-        await fetch('http://localhost:3001/dictionary', {
+        await fetch(`${API_URL}/dictionary`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dict)
@@ -135,7 +122,6 @@ export function DictionaryView({ onBack }: { onBack: () => void }) {
         setDict({ ...dict, itemVariants: next });
     };
 
-
     const toggleSort = (field: string) => {
         if (sortField === field) {
             setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
@@ -178,7 +164,6 @@ export function DictionaryView({ onBack }: { onBack: () => void }) {
             categoryWeights: { ...dict.categoryWeights, [cat]: weight }
         });
     };
-
 
     const updateVariantParentKey = (oldParent: string, newParent: string) => {
         const trimmed = newParent.trim();
