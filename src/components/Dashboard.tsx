@@ -19,7 +19,12 @@ export function Dashboard({ onSelectList, onOpenDict }: { onSelectList: (id: str
 
     useEffect(() => {
         const clientId = getClientId();
-        fetch(`${API_URL}/lists?clientId=${clientId}`)
+        // Grab any shared lists the user has visited
+        const joinedIds = JSON.parse(localStorage.getItem('joinedListIds') || '[]');
+        const joinedQuery = joinedIds.length > 0 ? `&joinedIds=${joinedIds.join(',')}` : '';
+
+        // Ask server for lists created and lists joined
+        fetch(`${API_URL}/lists?clientId=${clientId}${joinedQuery}`)
             .then(res => res.json())
             .then(data => Array.isArray(data) && setLists(data))
             .catch(err => console.error('Failed to load lists:', err));

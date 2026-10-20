@@ -6,17 +6,31 @@ const router = express.Router();
 // GET lists scoped only to this browser session
 router.get('/', async (req, res) => {
     try {
-        const { clientId } = req.query;
-        if (!clientId) {
-            return res.status(400).json({ error: 'Client ID required' });
+        const { clientId, joinedIds } = req.query;
+        const orConditions: any[] = [];
+
+        // 1 - Get lists this specific device created
+        if (clientId) {
+            orConditions.push({ clientId });
         }
 
-        // Only finds lists matching the device's ID
-        const lists = await List.find({ clientId }).sort({ createdAt: -1 });
+        // 2 - Get shared lists
+        if (typeof joinedIds === 'string' && joinedIds.trim() !== '') {
+            const idsArray = joinedIds.split(',');
+            orConditions.push({ _id: { $in: idsArray } });
+        }
+
+        // If no ID is provided, return nothing
+        if (orConditions.length === 0) {
+            return res.json([]);
+        }
+
+        // Search the database for lists matching either condition
+        const lists = await List.find({ $or: orConditions }).sort({ createdAt: -1 });
         res.json(lists);
     } catch (error) {
-        console.error('Error fetching lists:', error);
-        res.status(500).json({ error: 'Server error' });
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch lists' });
     }
 });
 
