@@ -18,6 +18,7 @@ const listSchema = new mongoose.Schema({
     name: { type: String, required: true },
     storeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', default: null },
     items: [itemSchema],
+    clientId: { type: String, required: true, index: true },
     createdAt: { type: Date, default: Date.now }
 });
 
