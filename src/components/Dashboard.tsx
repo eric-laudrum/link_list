@@ -55,13 +55,22 @@ export function Dashboard({ onSelectList, onOpenDict }: { onSelectList: (id: str
 
     const deleteList = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
+
+        // Remove from local storage
+        const savedJoined = JSON.parse(localStorage.getItem('joinedListIds') || '[]');
+        const updatedJoined = savedJoined.filter((joinedId: string) => joinedId !== id);
+        localStorage.setItem('joinedListIds', JSON.stringify(updatedJoined));
+
+        // Tell the server to drop user's ownership of the list
         try {
             const clientId = getClientId();
             await fetch(`${API_URL}/lists/${id}?clientId=${clientId}`, { method: 'DELETE' });
-            setLists(lists.filter(l => l._id !== id));
         } catch (error) {
-            console.error('Error deleting list:', error);
+            console.error('Error removing list:', error);
         }
+
+        // Remove from the screen
+        setLists(lists.filter(l => l._id !== id));
     };
 
     const handleJoin = (e: React.FormEvent) => {

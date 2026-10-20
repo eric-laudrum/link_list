@@ -53,22 +53,20 @@ router.post('/', async (req, res) => {
 // DELETE list
 router.delete('/:id', async (req, res) => {
     try {
-        const { id } = req.params;
         const { clientId } = req.query;
+        const list = await List.findById(req.params.id);
 
-        if (!clientId) {
-            return res.status(400).json({ error: 'Client ID required' });
+        if (!list) return res.status(404).json({ error: 'List not found' });
+
+        if (list.clientId === clientId) {
+            list.clientId = 'orphaned';
+            await list.save();
         }
 
-        const deletedList = await List.findOneAndDelete({ _id: id, clientId });
-        if (!deletedList) {
-            return res.status(404).json({ error: 'List not found or unauthorized' });
-        }
-
-        res.json({ message: 'List deleted successfully' });
+        res.json({ success: true });
     } catch (error) {
-        console.error('Error deleting list:', error);
-        res.status(500).json({ error: 'Server error' });
+        console.error(error);
+        res.status(500).json({ error: 'Failed to remove list' });
     }
 });
 
