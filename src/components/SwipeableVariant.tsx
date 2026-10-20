@@ -5,30 +5,51 @@ export function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck,
     const [startX, setStartX] = useState<number | null>(null);
     const [offsetX, setOffsetX] = useState(0);
 
-    const onPointerDown = (e: React.PointerEvent) => setStartX(e.clientX);
+    const onPointerDown = (e: React.PointerEvent) => {
+        // Lock the touch event to this specific element so the browser doesn't cancel it
+        e.currentTarget.setPointerCapture(e.pointerId);
+        setStartX(e.clientX);
+    };
 
     const onPointerMove = (e: React.PointerEvent) => {
         if (startX === null) return;
         const diff = e.clientX - startX;
-        if (diff > -120 && diff < 120) setOffsetX(diff);
+        if (diff > -120 && diff < 120) {
+            setOffsetX(diff);
+        }
     };
 
-    const onPointerUp = () => {
-        if (offsetX > 60) toggleCheck(itemId, variant._id, !variant.checked);
-        else if (offsetX < -60) toggleUnavailable(itemId, variant._id, !variant.unavailable);
+    const endSwipe = (e: React.PointerEvent) => {
+        if (startX !== null) {
+            if (offsetX > 60) {
+                toggleCheck(itemId, variant._id, !variant.checked);
+            } else if (offsetX < -60) {
+                toggleUnavailable(itemId, variant._id, !variant.unavailable);
+            }
+        }
+        e.currentTarget.releasePointerCapture(e.pointerId);
         setStartX(null);
         setOffsetX(0);
     };
 
-    const bgColor = variant.checked ? '#e6ffe6' : variant.unavailable ? '#ffe6e6' : '#fff';
-    const textColor = (variant.checked || variant.unavailable) ? '#999' : '#000';
+    // Determine saved database colors
+    const isChecked = variant.checked;
+    const isUnavailable = variant.unavailable;
+
+    // Provide real-time color changes WHILE the user is swiping
+    let bgColor = isChecked ? '#e6ffe6' : isUnavailable ? '#ffe6e6' : '#fff';
+    if (offsetX > 60) bgColor = '#e6ffe6'; // Preview green check
+    if (offsetX < -60) bgColor = '#ffe6e6'; // Preview red unavailable
+
+    const textColor = (isChecked || isUnavailable) ? '#999' : '#000';
+    const isStrikethrough = isChecked || isUnavailable || offsetX > 60 || offsetX < -60;
 
     return (
         <li
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerLeave={onPointerUp}
+            onPointerUp={endSwipe}
+            onPointerCancel={endSwipe} // Ensure the swipe finishes even if the browser interrupts
             style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -38,7 +59,8 @@ export function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck,
                 backgroundColor: bgColor,
                 color: textColor,
                 borderBottom: '1px solid #eee',
-                touchAction: 'pan-y'
+                touchAction: 'pan-y',
+                userSelect: 'none'
             }}
         >
             <div
@@ -60,7 +82,7 @@ export function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck,
                         width: '32px',
                         height: '22px',
                         textAlign: 'center',
-                        backgroundColor: bgColor,
+                        backgroundColor: bgColor, // Matches the swiped background
                         border: '1px solid #ccc',
                         borderRadius: '3px',
                         fontSize: '0.85rem',
@@ -76,9 +98,9 @@ export function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck,
                 </button>
             </div>
 
-            <span style={{flex: 1, textDecoration: (variant.checked || variant.unavailable) ? 'line-through' : 'none'}}>
-        {variant.name}
-      </span>
+            <span style={{flex: 1, textDecoration: isStrikethrough ? 'line-through' : 'none'}}>
+                {variant.name}
+            </span>
 
             <button
                 onPointerDown={e => e.stopPropagation()}

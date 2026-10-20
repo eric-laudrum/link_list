@@ -235,7 +235,7 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
                                         onPointerDown={() => startHold(item._id)}
                                         onPointerUp={cancelHold}
                                         onPointerLeave={cancelHold}
-                                        onPointerMove={cancelHold}
+
                                         onPointerCancel={cancelHold}
                                         style={{
                                             flex: '0 0 110px',
