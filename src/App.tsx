@@ -31,7 +31,7 @@ export default function App() {
         return <DictionaryView onBack={() => setShowDict(false)} />;
     }
     if (activeListId) {
-        return <ListView listId={activeListId} onBack={() => setActiveListId(null)} />;
+        return <ListView listId={activeListId} onBack={() => setActiveListId(null)} onOpenDictionary={() => setShowDict(true)} />;
     }
     return <Dashboard onSelectList={setActiveListId} onOpenDictionary={() => setShowDict(true)} />;
 }
