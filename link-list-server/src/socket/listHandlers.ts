@@ -190,6 +190,7 @@ export function registerListHandlers(io: Server, socket: Socket) {
             if (!list.storeId) {
                 store = await Store.create({
                     name: `${list.name} Layout`,
+                    clientId: list.clientId,
                     categoryWeights: {
                         ...CATEGORY_WEIGHTS,
                         [category]: orderWeight
@@ -236,6 +237,7 @@ export function registerListHandlers(io: Server, socket: Socket) {
 
                 store = await Store.create({
                     name: `${list.name} Layout`,
+                    clientId: list.clientId,
                     categoryWeights: weights,
                     itemDictionary: {}
                 });

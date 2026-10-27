@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import type { Item, GroceryList, Store } from '../types';
 import { SwipeableVariant } from './SwipeableVariant';
 import { API_URL } from '../config';
+import {getClientId} from "../utils/client.ts";
 
 export function ListView({ listId, onBack }: { listId: string, onBack: () => void }) {
     const [socket, setSocket] = useState<Socket | null>(null);
@@ -83,13 +84,15 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
     }, [list?.storeId, stores]);
 
     useEffect(() => {
-        if (list?.storeId && !stores.some(s => s._id === list.storeId)) {
-            fetch(`${API_URL}/stores`)
-                .then(res => res.json())
-                .then(setStores)
-                .catch(() => {});
-        }
-    }, [list?.storeId, stores]);
+        const clientId = getClientId();
+        const joinedIds = JSON.parse(localStorage.getItem('joinedListIds') || '[]');
+        const joinedQuery = joinedIds.length > 0 ? `&joinedIds=${joinedIds.join(',')}` : '';
+
+        fetch(`${API_URL}/stores?clientId=${clientId}${joinedQuery}`)
+            .then(res => res.json())
+            .then(setStores)
+            .catch(() => {});
+    }, []);
 
     const changeStore = (storeId: string) => {
         if (!socket) return;
