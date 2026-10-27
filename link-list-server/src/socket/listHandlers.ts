@@ -1,6 +1,12 @@
 import { Server, Socket } from 'socket.io';
-import { List, Dictionary } from '../models/index.ts';
-import { getItemMetadata, ITEM_VARIANTS, ITEM_DICTIONARY, resolveItemInput } from '../utils/dictionary.ts';
+import { List, Dictionary, Store } from '../models';
+import {
+    getItemMetadata,
+    ITEM_VARIANTS,
+    ITEM_DICTIONARY,
+    resolveItemInput,
+    CATEGORY_WEIGHTS
+} from '../utils/dictionary.ts';
 
 export function registerListHandlers(io: Server, socket: Socket) {
     socket.on('join-list', async (listId) => {
@@ -132,20 +138,134 @@ export function registerListHandlers(io: Server, socket: Socket) {
     });
 
     socket.on('update-list-store', async ({ listId, storeId }) => {
-        const list = await List.findByIdAndUpdate(
-            listId,
-            { storeId: storeId || null },
-            { new: true }
-        );
-        if (list) io.to(listId).emit('list-data', list);
+        try {
+            const list = await List.findById(listId);
+            if (!list) return;
+
+            list.storeId = storeId || null;
+
+            if (!storeId) {
+                list.items.forEach(item => {
+                    const meta = getItemMetadata(item.name);
+                    item.category = meta.category;
+                    item.orderWeight = meta.orderWeight;
+                });
+            } else {
+                const store = await Store.findById(storeId);
+                if (store) {
+                    list.items.forEach(item => {
+                        const lowerName = item.name.toLowerCase();
+                        if (store.itemDictionary && store.itemDictionary.has(lowerName)) {
+                            const customCat = store.itemDictionary.get(lowerName) as string;
+                            item.category = customCat;
+                            item.orderWeight = store.categoryWeights?.get(customCat) ?? 200;
+                        } else {
+                            const meta = getItemMetadata(item.name);
+                            if (store.categoryWeights && store.categoryWeights.has(meta.category)) {
+                                item.category = meta.category;
+                                item.orderWeight = store.categoryWeights.get(meta.category) as number;
+                            } else {
+                                item.category = meta.category;
+                                item.orderWeight = 200;
+                            }
+                        }
+                    });
+                }
+            }
+
+            list.markModified('items');
+            await list.save();
+            io.to(listId).emit('list-data', list);
+        } catch (error) {
+            console.error(error);
+        }
     });
 
     socket.on('update-item-category', async ({ listId, itemId, category, orderWeight }) => {
-        const list = await List.findOneAndUpdate(
-            { _id: listId, 'items._id': itemId },
-            { $set: { 'items.$.category': category, 'items.$.orderWeight': orderWeight } },
-            { new: true }
-        );
-        if (list) io.to(listId).emit('list-data', list);
+        try {
+            const list = await List.findById(listId);
+            if (!list) return;
+
+            let store;
+            if (!list.storeId) {
+                store = await Store.create({
+                    name: `${list.name} Layout`,
+                    categoryWeights: {
+                        ...CATEGORY_WEIGHTS,
+                        [category]: orderWeight
+                    },
+                    itemDictionary: {}
+                });
+                list.storeId = store._id.toString();
+            } else {
+                store = await Store.findById(list.storeId);
+                if (store && store.categoryWeights) {
+                    store.categoryWeights.set(category, orderWeight);
+                }
+            }
+
+            const item = list.items.id(itemId);
+            if (item) {
+                item.category = category;
+                item.orderWeight = orderWeight;
+                if (store) {
+                    if (!store.itemDictionary) store.itemDictionary = new Map();
+                    store.itemDictionary.set(item.name.toLowerCase(), category);
+                    await store.save();
+                }
+            }
+
+            list.markModified('items');
+            await list.save();
+            io.to(listId).emit('list-data', list);
+        } catch (error) {
+            console.error(error);
+        }
     });
+
+    socket.on('rename-category', async ({ listId, oldCategory, newCategory, currentWeight }) => {
+        try {
+            const list = await List.findById(listId);
+            if (!list) return;
+
+            let store;
+            if (!list.storeId) {
+                const weights = { ...CATEGORY_WEIGHTS };
+                weights[newCategory] = weights[oldCategory] ?? currentWeight;
+                delete weights[oldCategory];
+
+                store = await Store.create({
+                    name: `${list.name} Layout`,
+                    categoryWeights: weights,
+                    itemDictionary: {}
+                });
+                list.storeId = store._id.toString();
+            } else {
+                store = await Store.findById(list.storeId);
+                if (store && store.categoryWeights) {
+                    const existingWeight = store.categoryWeights.get(oldCategory) ?? currentWeight;
+                    store.categoryWeights.delete(oldCategory);
+                    store.categoryWeights.set(newCategory, existingWeight);
+                }
+            }
+
+            if (store) {
+                if (!store.itemDictionary) store.itemDictionary = new Map();
+                list.items.forEach(item => {
+                    if (item.category === oldCategory) {
+                        item.category = newCategory;
+                        store.itemDictionary?.set(item.name.toLowerCase(), newCategory);
+                    }
+                });
+                await store.save();
+            }
+
+            list.markModified('items');
+            await list.save();
+            io.to(listId).emit('list-data', list);
+        } catch (error) {
+            console.error(error);
+        }
+    });
+
 }

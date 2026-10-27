@@ -18,6 +18,29 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
     const [newCategoryName, setNewCategoryName] = useState('');
     const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    const [editingCategoryToRename, setEditingCategoryToRename] = useState<string | null>(null);
+    const [renamedCategoryValue, setRenamedCategoryValue] = useState('');
+
+    const startCategoryHold = (category: string) => {
+        if (holdTimer.current) clearTimeout(holdTimer.current);
+        holdTimer.current = setTimeout(() => {
+            setEditingCategoryToRename(category);
+            setRenamedCategoryValue(category);
+        }, 600);
+    };
+
+    const renameCategory = () => {
+        if (!socket || !editingCategoryToRename || !renamedCategoryValue.trim()) return;
+        socket.emit('rename-category', {
+            listId,
+            oldCategory: editingCategoryToRename,
+            newCategory: renamedCategoryValue.trim(),
+            currentWeight: getCategoryWeight(editingCategoryToRename, groupedItems[editingCategoryToRename] || [])
+        });
+        setEditingCategoryToRename(null);
+        setRenamedCategoryValue('');
+    };
+
     const copyShareLink = () => {
         navigator.clipboard.writeText(window.location.href);
         alert('List link copied to clipboard!');
@@ -56,6 +79,15 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
         const store = stores.find(s => s._id === list.storeId);
         if (store) {
             setActiveStoreWeights(store.categoryWeights || {});
+        }
+    }, [list?.storeId, stores]);
+
+    useEffect(() => {
+        if (list?.storeId && !stores.some(s => s._id === list.storeId)) {
+            fetch(`${API_URL}/stores`)
+                .then(res => res.json())
+                .then(setStores)
+                .catch(() => {});
         }
     }, [list?.storeId, stores]);
 
@@ -112,6 +144,7 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
     };
 
     const startHold = (itemId: string) => {
+        if (holdTimer.current) clearTimeout(holdTimer.current);
         holdTimer.current = setTimeout(() => {
             setEditingCategoryId(itemId);
         }, 600);
@@ -216,16 +249,33 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
                             borderBottom: '1px solid #cbd5e0'
                         }}
                     >
-                        <h3 style={{
-                            margin: '0',
-                            padding: '0.75rem 1rem',
-                            color: '#0f172a',
-                            fontSize: '1.1rem',
-                            backgroundColor: '#e2e8f0'
-                        }}>
+                        <h3
+                            onPointerDown={(e) => {
+                                e.currentTarget.setPointerCapture(e.pointerId);
+                                startCategoryHold(category);
+                            }}
+                            onPointerUp={(e) => {
+                                e.currentTarget.releasePointerCapture(e.pointerId);
+                                cancelHold();
+                            }}
+                            onPointerLeave={cancelHold}
+                            onPointerCancel={cancelHold}
+                            onContextMenu={(e) => e.preventDefault()}
+                            style={{
+                                margin: '0',
+                                padding: '0.75rem 1rem',
+                                color: '#0f172a',
+                                fontSize: '1.1rem',
+                                backgroundColor: '#e2e8f0',
+                                cursor: 'pointer',
+                                userSelect: 'none',
+                                WebkitUserSelect: 'none',
+                                WebkitTouchCallout: 'none'
+                            }}
+                        >
                             {category}
                         </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: '#cbd5e0' }}>
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: '#cbd5e0'}}>
                             {groupedItems[category].map(item => (
                                 <div key={item._id} style={{
                                     display: 'flex',
@@ -357,6 +407,29 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
                     </div>
                 </div>
             )}
+
+            {editingCategoryToRename && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', zIndex: 1000
+                }}>
+                    <div style={{ backgroundColor: '#fff', padding: '1.5rem', borderRadius: '8px', width: '90%', maxWidth: '400px' }}>
+                        <h3 style={{ marginTop: 0 }}>Rename Category</h3>
+                        <input
+                            type="text"
+                            value={renamedCategoryValue}
+                            onChange={e => setRenamedCategoryValue(e.target.value)}
+                            style={{ width: '100%', padding: '0.75rem', marginBottom: '1rem', border: '1px solid #ddd', borderRadius: '4px', boxSizing: 'border-box' }}
+                        />
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button onClick={renameCategory} style={{ flex: 1, padding: '0.75rem', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Save</button>
+                            <button onClick={() => setEditingCategoryToRename(null)} style={{ flex: 1, padding: '0.75rem', background: '#eee', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }
