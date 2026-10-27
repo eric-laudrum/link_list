@@ -47,6 +47,7 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
         alert('List link copied to clipboard!');
     };
 
+
     useEffect(() => {
         fetch(`${API_URL}/dictionary/variants`)
             .then(res => res.json())
@@ -63,6 +64,13 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
             .then(setStores)
             .catch(() => {});
     }, []);
+
+    const completeShop = () => {
+        if (window.confirm("Done Shopping? The list will be cleared and saved to your history.")) {
+            socket?.emit('complete-shop', { listId });
+        }
+    };
+
 
     useEffect(() => {
         const s = io(API_URL);
@@ -323,6 +331,28 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
                     </div>
                 ))}
             </div>
+
+            {list.items.length > 0 && (
+                <div style={{ padding: '1rem', display: 'flex', justifyContent: 'center' }}>
+                    <button
+                        onClick={completeShop}
+                        style={{
+                            padding: '0.75rem 2rem',
+                            backgroundColor: '#3b82f6',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '1.1rem',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            width: '100%',
+                            maxWidth: '300px'
+                        }}
+                    >
+                        Complete Shop
+                    </button>
+                </div>
+            )}
 
             {editingCategoryId && editingItem && (
                 <div style={{

@@ -1,5 +1,6 @@
 import { Server, Socket } from 'socket.io';
-import { List, Dictionary, Store } from '../models';
+import { List, Dictionary, Store, Trip } from '../models';
+
 import {
     getItemMetadata,
     ITEM_VARIANTS,
@@ -264,6 +265,26 @@ export function registerListHandlers(io: Server, socket: Socket) {
 
             list.markModified('items');
             await list.save();
+            io.to(listId).emit('list-data', list);
+        } catch (error) {
+            console.error(error);
+        }
+    });
+
+    socket.on('complete-shop', async ({ listId }) => {
+        try {
+            const list = await List.findById(listId);
+            if (!list || list.items.length === 0) return;
+
+            await Trip.create({
+                listId: list._id.toString(),
+                items: list.items
+            });
+
+            list.items = [];
+            list.markModified('items');
+            await list.save();
+
             io.to(listId).emit('list-data', list);
         } catch (error) {
             console.error(error);

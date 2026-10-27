@@ -10,7 +10,7 @@ const variantSchema = new mongoose.Schema({
 const itemSchema = new mongoose.Schema({
     name: { type: String, required: true },
     category: { type: String, default: 'Other' },
-    orderWeight: { type: Number, default: 100 },
+    orderWeight: { type: Number, default: 200 },
     variants: [variantSchema]
 });
 

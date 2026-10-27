@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Store } from '../types';
 import { API_URL } from '../config';
 
+
 interface DictionaryData {
     categoryWeights: Record<string, number>;
     itemDictionary: Record<string, string>;
@@ -23,8 +24,21 @@ export function DictionaryView({ onBack }: { onBack: () => void }) {
     const [newStoreName, setNewStoreName] = useState('');
     const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
 
+    const getClientId = () => {
+        let id = localStorage.getItem('clientId');
+        if (!id) {
+            id = 'client_' + Math.random().toString(36).substring(2, 9);
+            localStorage.setItem('clientId', id);
+        }
+        return id;
+    };
+
     useEffect(() => {
-        fetch(`${API_URL}/stores`)
+        const clientId = getClientId();
+        const joinedIds = JSON.parse(localStorage.getItem('joinedListIds') || '[]');
+        const joinedQuery = joinedIds.length > 0 ? `&joinedIds=${joinedIds.join(',')}` : '';
+
+        fetch(`${API_URL}/stores?clientId=${clientId}${joinedQuery}`)
             .then(res => res.json())
             .then(setStores)
             .catch(() => {});
@@ -35,8 +49,10 @@ export function DictionaryView({ onBack }: { onBack: () => void }) {
                 categoryWeights: data.categoryWeights || {},
                 itemDictionary: data.itemDictionary || {},
                 itemVariants: data.itemVariants || {}
-            }));
+            }))
+            .catch(err => console.error('Failed to load dictionary:', err));
     }, []);
+
 
     const createStore = async () => {
         if (!newStoreName.trim() || !dict) return;

@@ -5,8 +5,16 @@ import { CATEGORY_WEIGHTS, ITEM_VARIANTS, setDictionaryState } from '../utils/di
 const router = Router();
 
 router.get('/', async (req, res) => {
-    const dict = await Dictionary.findOne();
-    res.json(dict);
+    try {
+        let dict = await Dictionary.findOne();
+        if (!dict) {
+            dict = await Dictionary.create({ itemVariants: {} });
+        }
+        res.json(dict);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch dictionary' });
+    }
 });
 
 router.post('/', async (req, res) => {
