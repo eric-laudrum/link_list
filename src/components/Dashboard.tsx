@@ -12,7 +12,7 @@ const getClientId = () => {
     return id;
 };
 
-export function Dashboard({ onSelectList, onOpenDict }: { onSelectList: (id: string) => void, onOpenDict: () => void }) {
+export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (id: string) => void, onOpenDictionary: () => void }) {
     const [lists, setLists] = useState<GroceryList[]>([]);
     const [name, setName] = useState('');
     const [joinInput, setJoinInput] = useState('');
@@ -89,23 +89,69 @@ export function Dashboard({ onSelectList, onOpenDict }: { onSelectList: (id: str
 
     return (
         <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '1rem', boxSizing: 'border-box', fontFamily: 'sans-serif' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1 style={{ margin: 0, fontSize: '1.75rem', color: '#0f172a' }}>LinkList</h1>
-                <button onClick={onOpenDict} style={{ padding: '0.65rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e0', background: '#f8fafc', cursor: 'pointer', fontSize: '0.95rem' }}>
-                    Manage Dictionary
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem'}}>
+                <h1 style={{margin: 0, fontSize: '1.75rem', color: '#0f172a'}}>LinkList</h1>
+                <button onClick={onOpenDictionary} aria-label="Manage Dictionary" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '44px',
+                    height: '44px',
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e0',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    padding: 0
+                }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2"
+                         strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
                 </button>
             </div>
 
-            <form onSubmit={createList} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="New list name..." style={{ flex: 1, padding: '0.75rem', fontSize: '1rem', borderRadius: '8px', border: '1px solid #cbd5e0' }} />
-                <button type="submit" style={{ padding: '0.75rem 1.25rem', fontSize: '1rem', borderRadius: '8px', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer' }}>
+            <form onSubmit={createList} style={{display: 'flex', gap: '0.5rem', marginBottom: '1.5rem'}}>
+                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="New list name..."
+                       style={{
+                           flex: 1,
+                           padding: '0.75rem',
+                           fontSize: '1rem',
+                           borderRadius: '8px',
+                           border: '1px solid #cbd5e0'
+                       }}/>
+                <button type="submit" style={{
+                    padding: '0.75rem 1.25rem',
+                    fontSize: '1rem',
+                    borderRadius: '8px',
+                    background: '#22c55e',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer'
+                }}>
                     Create List
                 </button>
             </form>
 
-            <form onSubmit={handleJoin} style={{ display: 'flex', gap: '0.5rem', marginBottom: '2.5rem' }}>
-                <input type="text" value={joinInput} onChange={e => setJoinInput(e.target.value)} placeholder="Paste shared link or ID..." style={{ flex: 1, padding: '0.75rem', fontSize: '1rem', borderRadius: '8px', border: '1px solid #cbd5e0' }} />
-                <button type="submit" style={{ padding: '0.75rem 1.25rem', fontSize: '1rem', borderRadius: '8px', background: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer' }}>
+            <form onSubmit={handleJoin} style={{display: 'flex', gap: '0.5rem', marginBottom: '2.5rem'}}>
+                <input type="text" value={joinInput} onChange={e => setJoinInput(e.target.value)}
+                       placeholder="Paste shared link or ID..." style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    fontSize: '1rem',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e0'
+                }}/>
+                <button type="submit" style={{
+                    padding: '0.75rem 1.25rem',
+                    fontSize: '1rem',
+                    borderRadius: '8px',
+                    background: '#3b82f6',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer'
+                }}>
                     Join List
                 </button>
             </form>

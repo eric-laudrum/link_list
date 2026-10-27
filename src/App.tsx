@@ -33,5 +33,5 @@ export default function App() {
     if (activeListId) {
         return <ListView listId={activeListId} onBack={() => setActiveListId(null)} />;
     }
-    return <Dashboard onSelectList={setActiveListId} onOpenDict={() => setShowDict(true)} />;
+    return <Dashboard onSelectList={setActiveListId} onOpenDictionary={() => setShowDict(true)} />;
 }

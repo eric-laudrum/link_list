@@ -5,7 +5,7 @@ import { SwipeableVariant } from './SwipeableVariant';
 import { API_URL } from '../config';
 import {getClientId} from "../utils/client.ts";
 
-export function ListView({ listId, onBack }: { listId: string, onBack: () => void }) {
+export function ListView({ listId, onBack, onOpenDictionary }: { listId: string, onBack: () => void, onOpenDictionary: () => void }) {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [list, setList] = useState<GroceryList | null>(null);
     const [itemName, setItemName] = useState('');
@@ -192,29 +192,94 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
 
     return (
         <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '0', boxSizing: 'border-box', fontFamily: 'sans-serif' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1rem 0 1rem' }}>
-                <button onClick={onBack} aria-label="Back" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', background: '#f1f5f9', border: '1px solid #cbd5e0', borderRadius: '8px', cursor: 'pointer', padding: 0 }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="19" y1="12" x2="5" y2="12" />
-                        <polyline points="12 19 5 12 12 5" />
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '1rem 1rem 0 1rem'
+            }}>
+                <button onClick={onBack} aria-label="Back" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '44px',
+                    height: '44px',
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e0',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    padding: 0
+                }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2"
+                         strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"/>
+                        <polyline points="12 19 5 12 12 5"/>
                     </svg>
                 </button>
-                <h2 style={{ margin: 0, fontSize: '1.5rem', textAlign: 'center', flex: 1, padding: '0 1rem', color: '#0f172a' }}>
+                <h2 style={{
+                    margin: 0,
+                    fontSize: '1.5rem',
+                    textAlign: 'center',
+                    flex: 1,
+                    padding: '0 1rem',
+                    color: '#0f172a'
+                }}>
                     {list.name}
                 </h2>
-                <button onClick={copyShareLink} aria-label="Share List" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', background: '#e0f2fe', border: '1px solid #bae6fd', borderRadius: '8px', cursor: 'pointer', padding: 0 }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 8l5 5-5 5" />
-                        <path d="M23 13H11a7 7 0 0 0-7 7v1" />
-                    </svg>
-                </button>
+                <div style={{display: 'flex', gap: '0.5rem'}}>
+                    <button onClick={onOpenDictionary} aria-label="Manage Dictionary" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '44px',
+                        height: '44px',
+                        background: '#f1f5f9',
+                        border: '1px solid #cbd5e0',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        padding: 0
+                    }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2"
+                             strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                    </button>
+                    <button onClick={copyShareLink} aria-label="Share List" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '44px',
+                        height: '44px',
+                        background: '#e0f2fe',
+                        border: '1px solid #bae6fd',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        padding: 0
+                    }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth="2"
+                             strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 8l5 5-5 5"/>
+                            <path d="M23 13H11a7 7 0 0 0-7 7v1"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
+            <div style={{display: 'flex', justifyContent: 'center', padding: '1rem'}}>
                 <select
                     value={list.storeId || ''}
                     onChange={e => changeStore(e.target.value)}
-                    style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', borderRadius: '8px', border: '1px solid #cbd5e0', background: '#f8fafc', color: '#0f172a' }}
+                    style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        fontSize: '1rem',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e0',
+                        background: '#f8fafc',
+                        color: '#0f172a'
+                    }}
                 >
                     <option value="">Default Store Layout</option>
                     {stores.map(s => (
@@ -223,21 +288,62 @@ export function ListView({ listId, onBack }: { listId: string, onBack: () => voi
                 </select>
             </div>
 
-            <div style={{ padding: '0 1rem 1.5rem 1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>
+            <div style={{padding: '0 1rem 1.5rem 1rem'}}>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: '0.5rem',
+                    fontSize: '0.9rem',
+                    color: '#64748b'
+                }}>
                     <span>Progress</span>
                     <span>{checkedItems} / {totalItems}</span>
                 </div>
-                <div style={{ width: '100%', height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ width: `${progressPercentage}%`, height: '100%', backgroundColor: '#22c55e', transition: 'width 0.3s ease' }} />
+                <div style={{
+                    width: '100%',
+                    height: '8px',
+                    backgroundColor: '#e2e8f0',
+                    borderRadius: '4px',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{
+                        width: `${progressPercentage}%`,
+                        height: '100%',
+                        backgroundColor: '#22c55e',
+                        transition: 'width 0.3s ease'
+                    }}/>
                 </div>
             </div>
 
-            <form onSubmit={e => addItem(e)} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0 1rem 1rem 1rem' }}>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input type="text" value={itemName} onChange={e => setItemName(e.target.value)} placeholder="Item (e.g. Apples)" style={{ flex: 1, padding: '0.75rem', fontSize: '1rem', borderRadius: '8px', border: '1px solid #cbd5e0' }} />
-                    <input type="text" value={variantName} onChange={e => setVariantName(e.target.value)} placeholder="Variant" style={{ width: '30%', padding: '0.75rem', fontSize: '1rem', borderRadius: '8px', border: '1px solid #cbd5e0' }} />
-                    <button type="submit" style={{ padding: '0.75rem 1rem', fontSize: '1rem', borderRadius: '8px', background: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer' }}>Add</button>
+            <form onSubmit={e => addItem(e)}
+                  style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0 1rem 1rem 1rem'}}>
+                <div style={{display: 'flex', gap: '0.5rem'}}>
+                    <input type="text" value={itemName} onChange={e => setItemName(e.target.value)}
+                           placeholder="Item (e.g. Apples)" style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        fontSize: '1rem',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e0'
+                    }}/>
+                    <input type="text" value={variantName} onChange={e => setVariantName(e.target.value)}
+                           placeholder="Variant" style={{
+                        width: '30%',
+                        padding: '0.75rem',
+                        fontSize: '1rem',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e0'
+                    }}/>
+                    <button type="submit" style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '1rem',
+                        borderRadius: '8px',
+                        background: '#22c55e',
+                        color: '#fff',
+                        border: 'none',
+                        cursor: 'pointer'
+                    }}>Add
+                    </button>
                 </div>
                 {suggestions.length > 0 && (
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
