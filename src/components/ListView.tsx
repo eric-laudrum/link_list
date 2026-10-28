@@ -198,7 +198,14 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
     const progressPercentage = totalItems === 0 ? 0 : Math.round((checkedItems / totalItems) * 100);
 
     return (
-        <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '0', boxSizing: 'border-box', fontFamily: 'sans-serif' }}>
+        <div style={{
+            width: '100%',
+            maxWidth: '600px',
+            margin: '0 auto',
+            padding: '0',
+            boxSizing: 'border-box',
+            fontFamily: 'sans-serif'
+        }}>
             <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -324,25 +331,26 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
 
             <form onSubmit={e => addItem(e)}
                   style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0 1rem 1rem 1rem'}}>
+                <input type="text" value={itemName} onChange={e => setItemName(e.target.value)}
+                       placeholder="Item (e.g. Apples)" style={{
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '0.75rem',
+                    fontSize: '1rem',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e0'
+                }}/>
                 <div style={{display: 'flex', gap: '0.5rem'}}>
-                    <input type="text" value={itemName} onChange={e => setItemName(e.target.value)}
-                           placeholder="Item (e.g. Apples)" style={{
+                    <input type="text" value={variantName} onChange={e => setVariantName(e.target.value)}
+                           placeholder="Variant" style={{
                         flex: 1,
                         padding: '0.75rem',
                         fontSize: '1rem',
                         borderRadius: '8px',
                         border: '1px solid #cbd5e0'
                     }}/>
-                    <input type="text" value={variantName} onChange={e => setVariantName(e.target.value)}
-                           placeholder="Variant" style={{
-                        width: '30%',
-                        padding: '0.75rem',
-                        fontSize: '1rem',
-                        borderRadius: '8px',
-                        border: '1px solid #cbd5e0'
-                    }}/>
                     <button type="submit" style={{
-                        padding: '0.75rem 1rem',
+                        padding: '0.75rem 1.5rem',
                         fontSize: '1rem',
                         borderRadius: '8px',
                         background: '#22c55e',
@@ -353,9 +361,16 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                     </button>
                 </div>
                 {suggestions.length > 0 && (
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
                         {suggestions.map(sug => (
-                            <button key={sug} type="button" onClick={(e) => addItem(e, sug)} style={{ padding: '0.4rem 0.75rem', borderRadius: '1rem', border: '1px solid #cbd5e0', background: '#f8fafc', cursor: 'pointer', fontSize: '0.9rem' }}>
+                            <button key={sug} type="button" onClick={(e) => addItem(e, sug)} style={{
+                                padding: '0.4rem 0.75rem',
+                                borderRadius: '1rem',
+                                border: '1px solid #cbd5e0',
+                                background: '#f8fafc',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem'
+                            }}>
                                 + {sug}
                             </button>
                         ))}
@@ -363,7 +378,7 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                 )}
             </form>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '2rem' }}>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '2rem'}}>
                 {sortedCategories.map(category => (
                     <div
                         key={category}
@@ -425,7 +440,7 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                                     >
                                         {item.name}
                                     </div>
-                                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
+                                    <ul style={{listStyle: 'none', padding: 0, margin: 0, flex: 1}}>
                                         {(item.variants || []).map(variant => (
                                             <SwipeableVariant
                                                 key={variant._id}
@@ -446,7 +461,7 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
             </div>
 
             {list.items.length > 0 && (
-                <div style={{ padding: '1rem', display: 'flex', justifyContent: 'center' }}>
+                <div style={{padding: '1rem', display: 'flex', justifyContent: 'center'}}>
                     <button
                         onClick={completeShop}
                         style={{
@@ -560,17 +575,47 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                     backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center',
                     justifyContent: 'center', zIndex: 1000
                 }}>
-                    <div style={{ backgroundColor: '#fff', padding: '1.5rem', borderRadius: '8px', width: '90%', maxWidth: '400px' }}>
-                        <h3 style={{ marginTop: 0 }}>Rename Category</h3>
+                    <div style={{
+                        backgroundColor: '#fff',
+                        padding: '1.5rem',
+                        borderRadius: '8px',
+                        width: '90%',
+                        maxWidth: '400px'
+                    }}>
+                        <h3 style={{marginTop: 0}}>Rename Category</h3>
                         <input
                             type="text"
                             value={renamedCategoryValue}
                             onChange={e => setRenamedCategoryValue(e.target.value)}
-                            style={{ width: '100%', padding: '0.75rem', marginBottom: '1rem', border: '1px solid #ddd', borderRadius: '4px', boxSizing: 'border-box' }}
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                marginBottom: '1rem',
+                                border: '1px solid #ddd',
+                                borderRadius: '4px',
+                                boxSizing: 'border-box'
+                            }}
                         />
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button onClick={renameCategory} style={{ flex: 1, padding: '0.75rem', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Save</button>
-                            <button onClick={() => setEditingCategoryToRename(null)} style={{ flex: 1, padding: '0.75rem', background: '#eee', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
+                        <div style={{display: 'flex', gap: '0.5rem'}}>
+                            <button onClick={renameCategory} style={{
+                                flex: 1,
+                                padding: '0.75rem',
+                                background: '#22c55e',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}>Save
+                            </button>
+                            <button onClick={() => setEditingCategoryToRename(null)} style={{
+                                flex: 1,
+                                padding: '0.75rem',
+                                background: '#eee',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}>Cancel
+                            </button>
                         </div>
                     </div>
                 </div>
