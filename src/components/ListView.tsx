@@ -366,9 +366,11 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                     justifyContent: 'space-between',
                     marginBottom: '0.5rem',
                     fontSize: '0.9rem',
-                    color: '#64748b'
+                    color: progressPercentage === 100 ? '#22c55e' : '#64748b',
+                    fontWeight: progressPercentage === 100 ? 'bold' : 'normal',
+                    transition: 'all 0.3s ease'
                 }}>
-                    <span>Progress</span>
+                    <span>{progressPercentage === 100 ? 'Shop Complete!' : 'Progress'}</span>
                     <span>{checkedItems} / {totalItems}</span>
                 </div>
                 <div style={{
@@ -376,15 +378,25 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                     height: '8px',
                     backgroundColor: '#e2e8f0',
                     borderRadius: '4px',
-                    overflow: 'hidden'
+                    overflow: 'visible',
+                    position: 'relative'
                 }}>
                     <div style={{
                         width: `${progressPercentage}%`,
                         height: '100%',
                         backgroundColor: '#22c55e',
-                        transition: 'width 0.3s ease'
+                        borderRadius: '4px',
+                        transition: 'width 0.3s ease',
+                        animation: progressPercentage === 100 ? 'pulse-glow 1.5s infinite' : 'none'
                     }}/>
                 </div>
+                <style>{`
+                    @keyframes pulse-glow {
+                        0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+                        70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+                        100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+                    }
+                `}</style>
             </div>
 
             <div style={{display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '2rem'}}>
