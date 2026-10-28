@@ -302,32 +302,6 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                 </select>
             </div>
 
-            <div style={{padding: '0 1rem 1.5rem 1rem'}}>
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: '0.5rem',
-                    fontSize: '0.9rem',
-                    color: '#64748b'
-                }}>
-                    <span>Progress</span>
-                    <span>{checkedItems} / {totalItems}</span>
-                </div>
-                <div style={{
-                    width: '100%',
-                    height: '8px',
-                    backgroundColor: '#e2e8f0',
-                    borderRadius: '4px',
-                    overflow: 'hidden'
-                }}>
-                    <div style={{
-                        width: `${progressPercentage}%`,
-                        height: '100%',
-                        backgroundColor: '#22c55e',
-                        transition: 'width 0.3s ease'
-                    }}/>
-                </div>
-            </div>
 
             <form onSubmit={e => addItem(e)}
                   style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0 1rem 1rem 1rem'}}>
@@ -377,6 +351,41 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                     </div>
                 )}
             </form>
+
+            <div style={{
+                position: 'sticky',
+                top: 0,
+                zIndex: 50,
+                backgroundColor: '#ffffff',
+                padding: '1rem',
+                borderBottom: '1px solid #cbd5e0',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+            }}>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: '0.5rem',
+                    fontSize: '0.9rem',
+                    color: '#64748b'
+                }}>
+                    <span>Progress</span>
+                    <span>{checkedItems} / {totalItems}</span>
+                </div>
+                <div style={{
+                    width: '100%',
+                    height: '8px',
+                    backgroundColor: '#e2e8f0',
+                    borderRadius: '4px',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{
+                        width: `${progressPercentage}%`,
+                        height: '100%',
+                        backgroundColor: '#22c55e',
+                        transition: 'width 0.3s ease'
+                    }}/>
+                </div>
+            </div>
 
             <div style={{display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '2rem'}}>
                 {sortedCategories.map(category => (
