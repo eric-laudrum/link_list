@@ -168,7 +168,14 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
         }
     };
 
-    if (!list) return <div style={{ padding: '2rem' }}>Loading...</div>;
+    if (!list) return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+        </div>
+    );
 
     const groupedItems = list.items.reduce((acc, item) => {
         const cat = item.category || 'Other';
