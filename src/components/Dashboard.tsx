@@ -72,6 +72,13 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
         setLists(lists.filter(l => l._id !== id));
     };
 
+    const handleSelectList = (id: string) => {
+        const accessTimes = JSON.parse(localStorage.getItem('listAccessTimes') || '{}');
+        accessTimes[id] = Date.now();
+        localStorage.setItem('listAccessTimes', JSON.stringify(accessTimes));
+        onSelectList(id);
+    };
+
     const handleJoin = (e: React.FormEvent) => {
         e.preventDefault();
         if (!joinInput.trim()) return;
@@ -82,12 +89,26 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
             if (extracted) targetId = extracted;
         }
 
-        onSelectList(targetId);
+        handleSelectList(targetId);
         setJoinInput('');
     };
 
+    const accessTimes = JSON.parse(localStorage.getItem('listAccessTimes') || '{}');
+    const sortedLists = [...lists].sort((a, b) => {
+        const timeA = accessTimes[a._id] || 0;
+        const timeB = accessTimes[b._id] || 0;
+        return timeB - timeA;
+    });
+
     return (
-        <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '1rem', boxSizing: 'border-box', fontFamily: 'sans-serif' }}>
+        <div style={{
+            width: '100%',
+            maxWidth: '600px',
+            margin: '0 auto',
+            padding: '1rem',
+            boxSizing: 'border-box',
+            fontFamily: 'sans-serif'
+        }}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem'}}>
                 <h1 style={{margin: 0, fontSize: '1.75rem', color: '#0f172a'}}>LinkList</h1>
                 <button onClick={onOpenDictionary} aria-label="Manage Dictionary" style={{
@@ -155,9 +176,9 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                 </button>
             </form>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {lists.map(list => (
-                    <div key={list._id} onClick={() => onSelectList(list._id)} style={{
+            <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+                {sortedLists.map(list => (
+                    <div key={list._id} onClick={() => handleSelectList(list._id)} style={{
                         padding: '1rem',
                         border: '1px solid #ccc',
                         cursor: 'pointer',
