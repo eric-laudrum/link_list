@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { GroceryList } from '../types';
 import { API_URL } from '../config';
+import '../index.css';
 
 // Generates and saves a unique ID for this specific phone/browser
 const getClientId = () => {
@@ -109,8 +110,19 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
             boxSizing: 'border-box',
             fontFamily: 'sans-serif'
         }}>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem'}}>
-                <h1 style={{margin: 0, fontSize: '1.75rem', color: '#0f172a'}}>LinkList</h1>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '2rem'
+            }}>
+
+                <div style={{
+                    height: '4.5em',
+                    width: '4.5em'
+                }}>
+                    <img src="/public/linklist-logo.svg" alt={'image'}/>
+                </div>
                 <button onClick={onOpenDictionary} aria-label="Manage Dictionary" style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -118,7 +130,7 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                     width: '44px',
                     height: '44px',
                     background: '#f1f5f9',
-                    border: '1px solid #cbd5e0',
+                    border: '1 px solid #cbd5e0',
                     borderRadius: '8px',
                     cursor: 'pointer',
                     padding: 0
@@ -145,7 +157,7 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                     padding: '0.75rem 1.25rem',
                     fontSize: '1rem',
                     borderRadius: '8px',
-                    background: '#22c55e',
+                    background: '#86B7B7',
                     color: '#fff',
                     border: 'none',
                     cursor: 'pointer'
@@ -167,7 +179,7 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                     padding: '0.75rem 1.25rem',
                     fontSize: '1rem',
                     borderRadius: '8px',
-                    background: '#3b82f6',
+                    background: '#506a75',
                     color: '#fff',
                     border: 'none',
                     cursor: 'pointer'
@@ -176,28 +188,44 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                 </button>
             </form>
 
-            <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                {sortedLists.map(list => (
-                    <div key={list._id} onClick={() => handleSelectList(list._id)} style={{
-                        padding: '1rem',
-                        border: '1px solid #ccc',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                    }}>
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem'
+            }}>
+                {sortedLists.map((list, index) => (
+                    <div
+                        key={list._id}
+                        onClick={() => handleSelectList(list._id)}
+                        className="list-container"
+                        style={{
+                            padding: '1rem',
+                            border: '1px solid #ccc',
+                            borderRadius: '15px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            backgroundColor: ['var(--primary-teal)', 'var(--primary-grey)', 'var(--primary-dark-grey)'][index % 3]
+                        }}
+                    >
                         <div>
                             <h3 style={{margin: '0 0 0.5rem 0'}}>{list.name}</h3>
                             <span>{list.items.length} items</span>
                         </div>
-                        <button onClick={(e) => deleteList(e, list._id)} style={{
-                            background: 'none',
-                            border: 'none',
-                            color: 'red',
-                            cursor: 'pointer',
-                            fontSize: '1.5rem',
-                            padding: '0 0.5rem'
-                        }}>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                deleteList(e, list._id);
+                            }}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '1.5rem',
+                                padding: '0 0.5rem'
+                            }}
+                        >
                             &times;
                         </button>
                     </div>
