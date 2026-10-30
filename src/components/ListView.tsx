@@ -316,7 +316,7 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                 }}/>
                 <div style={{display: 'flex', gap: '0.5rem'}}>
                     <input type="text" value={variantName} onChange={e => setVariantName(e.target.value)}
-                           placeholder="Variant" style={{
+                           placeholder="Type" style={{
                         flex: 1,
                         padding: '0.75rem',
                         fontSize: '1rem',
