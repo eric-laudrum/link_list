@@ -244,7 +244,6 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                     marginTop: 'auto',
                     paddingTop: '1em',
                 }}>
-                <img alt="link list ad"/>
                 <img
                     src="/assets/LinkList-Ad.png"
                     alt={'link list ad'}
