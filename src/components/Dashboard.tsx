@@ -126,7 +126,7 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
 
 
                 }}>
-                    <img src="/public/LinkList-NameLogo.svg" alt={'image'}/>
+                    <img src="/linklist-logo.svg" alt="image"/>
                 </div>
                 <button onClick={onOpenDictionary} aria-label="Manage Dictionary" style={{
                     display: 'flex',
@@ -244,8 +244,9 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                     marginTop: 'auto',
                     paddingTop: '1em',
                 }}>
+                <img alt="link list ad"/>
                 <img
-                    src='/public/LinkList-ad.png'
+                    src={'/LinkList-ad.png'}
                     alt={'link list ad'}
                     style={{
                         width: '100%',
