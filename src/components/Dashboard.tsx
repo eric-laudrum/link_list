@@ -103,25 +103,30 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
 
     return (
         <div style={{
+            display: 'flex',
+            flexDirection: 'column',
             width: '100%',
             maxWidth: '600px',
+            flex: 1,
             margin: '0 auto',
             padding: '1rem',
             boxSizing: 'border-box',
-            fontFamily: 'sans-serif'
+            fontFamily: 'sans-serif',
+
         }}>
             <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '2rem'
+                marginBottom: '2rem',
             }}>
 
                 <div style={{
-                    height: '4.5em',
-                    width: '4.5em'
+                    width: '10rem',
+
+
                 }}>
-                    <img src="/public/linklist-logo.svg" alt={'image'}/>
+                    <img src="/public/LinkList-NameLogo.svg" alt={'image'}/>
                 </div>
                 <button onClick={onOpenDictionary} aria-label="Manage Dictionary" style={{
                     display: 'flex',
@@ -203,6 +208,8 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                             border: '1px solid #ccc',
                             borderRadius: '15px',
                             cursor: 'pointer',
+                            color: 'white',
+                            textShadow: '0.5px 0.5px var(--primary-dark-grey)',
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
@@ -230,6 +237,22 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                         </button>
                     </div>
                 ))}
+            </div>
+
+            <div
+                style={{
+                    marginTop: 'auto',
+                    paddingTop: '1em',
+                }}>
+                <img
+                    src='/public/LinkList-ad.png'
+                    alt={'link list ad'}
+                    style={{
+                        width: '100%',
+                        borderRadius: '15px',
+                        marginTop: '10px'
+                    }}
+                />
             </div>
         </div>
     );

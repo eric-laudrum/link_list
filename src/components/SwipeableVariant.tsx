@@ -6,7 +6,6 @@ export function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck,
     const [offsetX, setOffsetX] = useState(0);
 
     const onPointerDown = (e: React.PointerEvent) => {
-        // Lock the touch event to this specific element so the browser doesn't cancel it
         e.currentTarget.setPointerCapture(e.pointerId);
         setStartX(e.clientX);
     };
@@ -32,14 +31,12 @@ export function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck,
         setOffsetX(0);
     };
 
-    // Determine saved database colors
     const isChecked = variant.checked;
     const isUnavailable = variant.unavailable;
 
-    // Provide real-time color changes WHILE the user is swiping
-    let bgColor = isChecked ? '#e6ffe6' : isUnavailable ? '#ffe6e6' : '#fff';
-    if (offsetX > 60) bgColor = '#e6ffe6'; // Preview green check
-    if (offsetX < -60) bgColor = '#ffe6e6'; // Preview red unavailable
+    let bgColor = isChecked ? 'rgba(134, 183, 183, 0.25)' : isUnavailable ? '#ffe6e6' : '#fff';
+    if (offsetX > 60) bgColor = 'rgba(134, 183, 183, 0.25)';
+    if (offsetX < -60) bgColor = '#ffe6e6';
 
     const textColor = (isChecked || isUnavailable) ? '#999' : '#000';
     const isStrikethrough = isChecked || isUnavailable || offsetX > 60 || offsetX < -60;
@@ -49,7 +46,7 @@ export function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck,
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={endSwipe}
-            onPointerCancel={endSwipe} // Ensure the swipe finishes even if the browser interrupts
+            onPointerCancel={endSwipe}
             style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -82,7 +79,7 @@ export function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck,
                         width: '32px',
                         height: '22px',
                         textAlign: 'center',
-                        backgroundColor: bgColor, // Matches the swiped background
+                        backgroundColor: bgColor,
                         border: '1px solid #ccc',
                         borderRadius: '3px',
                         fontSize: '0.85rem',
@@ -111,7 +108,8 @@ export function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck,
                     color: 'red',
                     cursor: 'pointer',
                     fontSize: '1.5rem',
-                    padding: '0 0.5rem'
+                    padding: '0 0.5rem',
+
                 }}
             >
                 &times;

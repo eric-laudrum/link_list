@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import type { Item, GroceryList, Store } from '../types';
 import { SwipeableVariant } from './SwipeableVariant';
 import { API_URL } from '../config';
-import {getClientId} from "../utils/client.ts";
+import { getClientId } from "../utils/client.ts";
 
 export function ListView({ listId, onBack, onOpenDictionary }: { listId: string, onBack: () => void, onOpenDictionary: () => void }) {
     const [socket, setSocket] = useState<Socket | null>(null);
@@ -14,6 +14,7 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
     const [categoriesDict, setCategoriesDict] = useState<Record<string, number>>({});
     const [stores, setStores] = useState<Store[]>([]);
     const [activeStoreWeights, setActiveStoreWeights] = useState<Record<string, number>>({});
+    const [isLayoutDropdownOpen, setIsLayoutDropdownOpen] = useState(false);
 
     const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
     const [newCategoryName, setNewCategoryName] = useState('');
@@ -47,7 +48,6 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
         alert('List link copied to clipboard!');
     };
 
-
     useEffect(() => {
         fetch(`${API_URL}/dictionary/variants`)
             .then(res => res.json())
@@ -70,7 +70,6 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
             socket?.emit('complete-shop', { listId });
         }
     };
-
 
     useEffect(() => {
         const s = io(API_URL);
@@ -193,12 +192,20 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
     const suggestions = variantsDict[itemName.toLowerCase().trim()] || [];
     const editingItem = list.items.find(i => i._id === editingCategoryId);
 
-    const totalItems = list.items.reduce((sum, item) => sum + (item.variants?.filter(v => !v.unavailable).length || 0), 0);
+    const totalItems = list.items.reduce((sum, item) => sum + (item.variants?.length || 0), 0);
     const checkedItems = list.items.reduce((sum, item) => sum + (item.variants?.filter(v => v.checked).length || 0), 0);
-    const progressPercentage = totalItems === 0 ? 0 : Math.round((checkedItems / totalItems) * 100);
+    const unavailableItems = list.items.reduce((sum, item) => sum + (item.variants?.filter(v => v.unavailable).length || 0), 0);
+
+    const checkedPercentage = totalItems === 0 ? 0 : (checkedItems / totalItems) * 100;
+    const unavailablePercentage = totalItems === 0 ? 0 : (unavailableItems / totalItems) * 100;
+    const totalCompleted = checkedItems + unavailableItems;
+    const isComplete = totalItems > 0 && totalCompleted === totalItems;
 
     return (
         <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
             width: '100%',
             maxWidth: '600px',
             margin: '0 auto',
@@ -209,8 +216,8 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
             <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '1rem 1rem 0 1rem'
+                alignItems: 'flex-start',
+                padding: '1rem 1rem 0 1rem',
             }}>
                 <button onClick={onBack} aria-label="Back" style={{
                     display: 'flex',
@@ -218,28 +225,112 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                     justifyContent: 'center',
                     width: '44px',
                     height: '44px',
-                    background: '#f1f5f9',
+                    background: 'var(--primary-teal)',
                     border: '1px solid #cbd5e0',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    padding: 0
+                    padding: 0,
+                    flexShrink: 0
                 }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2"
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"
                          strokeLinecap="round" strokeLinejoin="round">
                         <line x1="19" y1="12" x2="5" y2="12"/>
                         <polyline points="12 19 5 12 12 5"/>
                     </svg>
                 </button>
-                <h2 style={{
-                    margin: 0,
-                    fontSize: '1.5rem',
-                    textAlign: 'center',
+
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
                     flex: 1,
-                    padding: '0 1rem',
-                    color: '#0f172a'
+                    padding: '0 0.5rem',
+                    position: 'relative',
                 }}>
-                    {list.name}
-                </h2>
+                    <div
+                        style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '0.25rem' }}
+                        onClick={() => setIsLayoutDropdownOpen(!isLayoutDropdownOpen)}
+                    >
+                        <h2 style={{
+                            margin: 0,
+                            fontSize: '1.5rem',
+                            textAlign: 'center',
+                            color: 'var(--primary-teal)',
+                            textShadow: '0.2px 0.2px var(--primary-dark-grey)',
+                        }}>
+                            {list.name}
+                        </h2>
+                        <svg
+                            width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-teal)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                            style={{
+                                transition: 'transform 0.2s ease',
+                                transform: isLayoutDropdownOpen ? 'rotate(90deg)' : 'rotate(0deg)'
+                            }}
+                        >
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+
+                    {isLayoutDropdownOpen && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            marginTop: '0.5rem',
+                            width: 'max-content',
+                            minWidth: '200px',
+                            backgroundColor: '#fff',
+                            border: '1px solid #cbd5e0',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                            zIndex: 100,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            overflow: 'hidden'
+                        }}>
+                            <button
+                                onClick={() => {
+                                    changeStore('');
+                                    setIsLayoutDropdownOpen(false);
+                                }}
+                                style={{
+                                    padding: '0.75rem 1rem',
+                                    textAlign: 'left',
+                                    background: !list.storeId ? '#f8fafc' : 'transparent',
+                                    border: 'none',
+                                    borderBottom: '1px solid #e2e8f0',
+                                    cursor: 'pointer',
+                                    fontSize: '0.9rem',
+                                    fontWeight: !list.storeId ? 'bold' : 'normal',
+                                }}
+                            >
+                                Default Store Layout
+                            </button>
+
+                            {stores.map(s => (
+                                <button
+                                    key={s._id}
+                                    onClick={() => {
+                                        changeStore(s._id);
+                                        setIsLayoutDropdownOpen(false);
+                                    }}
+                                    style={{
+                                        padding: '0.75rem 1rem',
+                                        textAlign: 'left',
+                                        background: list.storeId === s._id ? '#f8fafc' : 'transparent',
+                                        border: 'none',
+                                        borderBottom: '1px solid #e2e8f0',
+                                        cursor: 'pointer',
+                                        fontSize: '0.9rem',
+                                        fontWeight: list.storeId === s._id ? 'bold' : 'normal',
+                                    }}
+                                >
+                                    {s.name}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
                 <div style={{display: 'flex', gap: '0.5rem'}}>
                     <button onClick={onOpenDictionary} aria-label="Manage Dictionary" style={{
                         display: 'flex',
@@ -253,11 +344,11 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                         cursor: 'pointer',
                         padding: 0
                     }}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2"
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-teal)" strokeWidth="2"
                              strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="12" cy="12" r="3"/>
                             <path
-                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                         </svg>
                     </button>
                     <button onClick={copyShareLink} aria-label="Share List" style={{
@@ -266,13 +357,13 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                         justifyContent: 'center',
                         width: '44px',
                         height: '44px',
-                        background: '#e0f2fe',
-                        border: '1px solid #bae6fd',
+                        background: 'var(--primary-teal)',
+                        border: '1px solid var(--primary-teal)',
                         borderRadius: '8px',
                         cursor: 'pointer',
                         padding: 0
                     }}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth="2"
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"
                              strokeLinecap="round" strokeLinejoin="round">
                             <path d="M18 8l5 5-5 5"/>
                             <path d="M23 13H11a7 7 0 0 0-7 7v1"/>
@@ -281,30 +372,15 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                 </div>
             </div>
 
-            <div style={{display: 'flex', justifyContent: 'center', padding: '1rem'}}>
-                <select
-                    value={list.storeId || ''}
-                    onChange={e => changeStore(e.target.value)}
-                    style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        fontSize: '1rem',
-                        borderRadius: '8px',
-                        border: '1px solid #cbd5e0',
-                        background: '#f8fafc',
-                        color: '#0f172a'
-                    }}
-                >
-                    <option value="">Default Store Layout</option>
-                    {stores.map(s => (
-                        <option key={s._id} value={s._id}>{s.name}</option>
-                    ))}
-                </select>
-            </div>
-
-
             <form onSubmit={e => addItem(e)}
-                  style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0 1rem 1rem 1rem'}}>
+                  style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.5rem',
+                      padding: '0 1rem 1rem 1rem',
+                      marginTop: '1em'
+                  }}
+            >
                 <input type="text" value={itemName} onChange={e => setItemName(e.target.value)}
                        placeholder="Item (e.g. Apples)" style={{
                     width: '100%',
@@ -326,8 +402,9 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                     <button type="submit" style={{
                         padding: '0.75rem 1.5rem',
                         fontSize: '1rem',
+                        fontWeight: 'bold',
                         borderRadius: '8px',
-                        background: '#22c55e',
+                        background: 'var(--primary-teal)',
                         color: '#fff',
                         border: 'none',
                         cursor: 'pointer'
@@ -366,28 +443,39 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                     justifyContent: 'space-between',
                     marginBottom: '0.5rem',
                     fontSize: '0.9rem',
-                    color: progressPercentage === 100 ? '#22c55e' : '#64748b',
-                    fontWeight: progressPercentage === 100 ? 'bold' : 'normal',
+                    color: isComplete ? 'var(--primary-teal)' : 'var(--primary-dark-grey)',
+                    fontWeight: isComplete ? 'bold' : 'normal',
                     transition: 'all 0.3s ease'
                 }}>
-                    <span>{progressPercentage === 100 ? 'Shop Complete!' : 'Progress'}</span>
-                    <span>{checkedItems} / {totalItems}</span>
+                    <span>{isComplete ? 'Complete!' : 'Progress'}</span>
+                    <span>{totalCompleted} / {totalItems}</span>
                 </div>
                 <div style={{
                     width: '100%',
                     height: '8px',
                     backgroundColor: '#e2e8f0',
                     borderRadius: '4px',
-                    overflow: 'visible',
-                    position: 'relative'
+                    position: 'relative',
+                    overflow: 'hidden',
+                    animation: isComplete ? 'pulse-glow 1.8s infinite' : 'none'
                 }}>
                     <div style={{
-                        width: `${progressPercentage}%`,
+                        position: 'absolute',
+                        left: 0,
+                        top: 0,
+                        width: `${checkedPercentage}%`,
                         height: '100%',
-                        backgroundColor: '#22c55e',
-                        borderRadius: '4px',
-                        transition: 'width 0.3s ease',
-                        animation: progressPercentage === 100 ? 'pulse-glow 1.5s infinite' : 'none'
+                        backgroundColor: 'var(--primary-teal)',
+                        transition: 'width 0.3s ease'
+                    }}/>
+                    <div style={{
+                        position: 'absolute',
+                        right: 0,
+                        top: 0,
+                        width: `${unavailablePercentage}%`,
+                        height: '100%',
+                        backgroundColor: '#ef4444',
+                        transition: 'width 0.3s ease'
                     }}/>
                 </div>
                 <style>{`
@@ -406,7 +494,8 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                         style={{
                             backgroundColor: '#f8f9fa',
                             borderTop: '1px solid #cbd5e0',
-                            borderBottom: '1px solid #cbd5e0'
+                            borderBottom: '1px solid #cbd5e0',
+
                         }}
                     >
                         <h3
@@ -424,9 +513,11 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                             style={{
                                 margin: '0',
                                 padding: '0.75rem 1rem',
-                                color: '#0f172a',
+                                color: 'white',
+                                fontWeight: 'bold',
+                                textShadow: '0.5px 0.5px var(--primary-dark-grey)',
                                 fontSize: '1.1rem',
-                                backgroundColor: '#e2e8f0',
+                                backgroundColor: 'var(--primary-teal)',
                                 cursor: 'pointer',
                                 userSelect: 'none',
                                 WebkitUserSelect: 'none',
@@ -435,6 +526,7 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                         >
                             {category}
                         </h3>
+
                         <div style={{display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: '#cbd5e0'}}>
                             {groupedItems[category].map(item => (
                                 <div key={item._id} style={{
@@ -482,12 +574,18 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
             </div>
 
             {list.items.length > 0 && (
-                <div style={{padding: '1rem', display: 'flex', justifyContent: 'center'}}>
+                <div
+                    style={{
+                        marginTop: 'auto',
+                        padding: '3rem',
+                        display: 'flex',
+                        justifyContent: 'center'
+                    }}>
                     <button
                         onClick={completeShop}
                         style={{
                             padding: '0.75rem 2rem',
-                            backgroundColor: '#3b82f6',
+                            backgroundColor: 'var(--primary-dark-grey)',
                             color: '#fff',
                             border: 'none',
                             borderRadius: '8px',
@@ -568,6 +666,7 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                                 Add
                             </button>
                         </div>
+
                         <button
                             onClick={() => {
                                 setEditingCategoryId(null);
@@ -578,7 +677,7 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                                 width: '100%',
                                 padding: '0.75rem',
                                 background: '#eee',
-                                border: '5px solid gold',
+                                border: '1px solid var(--primary-dark-grey)',
                                 cursor: 'pointer',
                                 borderRadius: '4px',
 
