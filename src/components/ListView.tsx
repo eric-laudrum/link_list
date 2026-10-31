@@ -232,7 +232,8 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                     borderRadius: '8px',
                     cursor: 'pointer',
                     padding: 0,
-                    flexShrink: 0
+                    flexShrink: 0,
+
                 }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"
                          strokeLinecap="round" strokeLinejoin="round">

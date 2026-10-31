@@ -218,7 +218,7 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                             textShadow: '0.5px 0.5px var(--primary-dark-grey)',
                             display: 'flex',
                             justifyContent: 'space-between',
-                            alignItems: 'center',
+                            alignItems: 'left',
                             backgroundColor: ['var(--primary-teal)', 'var(--primary-grey)', 'var(--primary-dark-grey)'][index % 3]
                         }}
                     >

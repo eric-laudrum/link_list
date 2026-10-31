@@ -211,7 +211,28 @@ export function DictionaryView({ onBack }: { onBack: () => void }) {
                 marginBottom: '1rem',
                 gap: '0.5rem'
             }}>
-                <button onClick={onBack} style={{padding: '0.5rem 0.75rem', fontSize: '0.9rem'}}>&larr; Back</button>
+
+                <button onClick={onBack} aria-label="Back" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '44px',
+                    height: '44px',
+                    background: 'var(--primary-teal)',
+                    border: '1px solid #cbd5e0',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    padding: 0,
+                    flexShrink: 0,
+
+                }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"
+                         strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"/>
+                        <polyline points="12 19 5 12 12 5"/>
+                    </svg>
+                </button>
+
                 <h2 style={{margin: 0, fontSize: '1.25rem'}}>Manage Items</h2>
                 <button onClick={save} style={{
                     padding: '0.5rem 0.75rem',
@@ -284,7 +305,16 @@ export function DictionaryView({ onBack }: { onBack: () => void }) {
                                 ))}
                             </select>
                             <button onClick={addItem}
-                                    style={{padding: '0.65rem 1rem', fontSize: '1rem', borderRadius: '4px'}}>Add
+                                    style={{
+                                        padding: '0.65rem 1rem',
+                                        fontSize: '1rem',
+                                        borderRadius: '4px',
+                                        backgroundColor: 'var(--primary-dark-grey)',
+                                        color: 'white',
+                                        textShadow: '0.2px 0.2px black',
+                                        fontWeight: 'bold',
+                                    }}>
+                                Add
                             </button>
                         </div>
                     </div>
