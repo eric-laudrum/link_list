@@ -128,17 +128,20 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                 }}>
                     <img src="/assets/LinkList-NameLogo.svg" alt="image"/>
                 </div>
-                <button onClick={onOpenDictionary} aria-label="Manage Dictionary" style={{
+                {/* Settings / Manage Dictionary Button */}
+                <button onClick={onOpenDictionary} aria-label="Manage Dictionary"
+                        style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     width: '44px',
                     height: '44px',
                     background: '#f1f5f9',
-                    border: '1 px solid #cbd5e0',
+                    border: '1px solid #cbd5e0',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    padding: 0
+                    padding: 0,
+
                 }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2"
                          strokeLinecap="round" strokeLinejoin="round">
@@ -193,10 +196,13 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                 </button>
             </form>
 
+            {/* List Container */}
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1rem'
+                gap: '1rem',
+                flex: 1,
+                minHeight: '0',
             }}>
                 {sortedLists.map((list, index) => (
                     <div
@@ -239,10 +245,11 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                 ))}
             </div>
 
+            {/* Ad Container */}
             <div
                 style={{
                     marginTop: 'auto',
-                    paddingTop: '1em',
+                    padding: '2em 0 1em',
                 }}>
                 <img
                     src="/assets/LinkList-Ad.png"
@@ -250,7 +257,7 @@ export function Dashboard({ onSelectList, onOpenDictionary }: { onSelectList: (i
                     style={{
                         width: '100%',
                         borderRadius: '15px',
-                        marginTop: '10px'
+                        display: 'block'
                     }}
                 />
             </div>

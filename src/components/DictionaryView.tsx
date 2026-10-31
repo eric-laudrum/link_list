@@ -212,10 +212,10 @@ export function DictionaryView({ onBack }: { onBack: () => void }) {
                 gap: '0.5rem'
             }}>
                 <button onClick={onBack} style={{padding: '0.5rem 0.75rem', fontSize: '0.9rem'}}>&larr; Back</button>
-                <h2 style={{margin: 0, fontSize: '1.25rem'}}>Dictionary</h2>
+                <h2 style={{margin: 0, fontSize: '1.25rem'}}>Manage Items</h2>
                 <button onClick={save} style={{
                     padding: '0.5rem 0.75rem',
-                    background: '#4caf50',
+                    background: 'var(--primary-teal)',
                     color: '#fff',
                     border: 'none',
                     borderRadius: '4px',
