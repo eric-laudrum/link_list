@@ -79,9 +79,8 @@ export function SwipeableVariant({ itemId, variant, updateQuantity, toggleCheck,
                         width: '32px',
                         height: '22px',
                         textAlign: 'center',
-                        backgroundColor: bgColor,
-                        border: '1px solid #ccc',
-                        borderRadius: '3px',
+
+                        border: 'none',
                         fontSize: '0.85rem',
                         padding: 0
                     }}

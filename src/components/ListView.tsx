@@ -211,13 +211,15 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
             margin: '0 auto',
             padding: '0',
             boxSizing: 'border-box',
-            fontFamily: 'sans-serif'
+            fontFamily: 'sans-serif',
+
         }}>
             <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                padding: '1rem 1rem 0 1rem',
+                alignItems: 'center',
+
+
             }}>
                 <button onClick={onBack} aria-label="Back" style={{
                     display: 'flex',
@@ -241,18 +243,28 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
 
                 <div style={{
                     display: 'flex',
+                    flex: 1,
                     flexDirection: 'column',
                     alignItems: 'center',
-                    flex: 1,
-                    padding: '0 0.5rem',
+
+
                     position: 'relative',
+
                 }}>
+                    {/* Dropdown */}
                     <div
-                        style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '0.25rem' }}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                            gap: '0.25rem' ,
+
+                        }}
                         onClick={() => setIsLayoutDropdownOpen(!isLayoutDropdownOpen)}
                     >
                         <h2 style={{
                             margin: 0,
+                            paddingLeft: '2rem',
                             fontSize: '1.5rem',
                             textAlign: 'center',
                             color: 'var(--primary-teal)',
@@ -392,7 +404,7 @@ export function ListView({ listId, onBack, onOpenDictionary }: { listId: string,
                 }}/>
                 <div style={{display: 'flex', gap: '0.5rem'}}>
                     <input type="text" value={variantName} onChange={e => setVariantName(e.target.value)}
-                           placeholder="Type" style={{
+                           placeholder="Type (e.g. Honeycrisp)" style={{
                         flex: 1,
                         padding: '0.75rem',
                         fontSize: '1rem',
